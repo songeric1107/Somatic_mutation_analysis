@@ -1,24 +1,10 @@
-setwd("/Users/ysong/Desktop/combine_tempus_foundation/212")
-all.maf=readRDS("/Users/ysong/Desktop/combine_tempus_foundation/212/tempus_foundation_w_conflicP.rds")
-sub.maf=subsetMaf(met.maf,tsb=c("ORD-1016691-01", "ORD-1023210-01","TRF329966"))
 
-
-sub_tally_SNV <- sig_tally(sub.maf,
-                          ref_genome = "BSgenome.Hsapiens.UCSC.hg38",
-                          useSyn = F)
-suball=bp_extract_signatures(sub_tally_SNV$nmf_matrix, range = 2:10)
-
-fit.sig.abs=sig_fit(t(mt_tally_SNV$nmf_matrix), sig_index = "ALL",sig_db="SBS")
-
-
-
-
-
+all.maf=readRDS("tempus_foundation_w_conflicP.rds")
 
 ##########################################
+#read metachronous of all samples
+met.maf=readRDS("metachro.maf.417.rds")
 
-met.maf=readRDS("/Users/ysong/Desktop/pattern_failure/result_417/metachro.maf.417.rds")
-#meta.sig=meta[which(meta$id%in%rownames(all.tnm$nmf_matrix)),]
 meta=met.maf@clinical.data
 meta.met=meta[which(meta$Time..2.synchronous..1.metachronous==1),]
 
@@ -59,13 +45,8 @@ bpall=bp_extract_signatures(mt_tally_SNV$nmf_matrix, range = 2:10)
 
 bp2 <- bp_extract_signatures(mt_tally_SNV$nmf_matrix, range = 2:10)
 
-save(bp2,file="/Users/ysong/Desktop/pattern_failure/result_417/bp_sig.met.417.RData")
+save(bp2,file="bp_sig.met.417.RData")
 
-
-
-setwd("/Users/ysong/Desktop/pattern_failure/result_417/")
-
-load("/Users/ysong/Desktop/pattern_failure/result_417/bp_sig.met.417.RData")
 
 sig.sy=bp2$exposure$K6$exposure_mean
 
