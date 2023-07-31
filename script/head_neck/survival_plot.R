@@ -1,6 +1,6 @@
 
 library(maftools)
-setwd("~/Desktop/P_Tran_ref/head_neck/")
+
 
 soma=readRDS("soma.filter.rds")
 
