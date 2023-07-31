@@ -1,7 +1,7 @@
 library(maftools)
 setwd("~/Desktop/head_neck/")
 
-soma=readRDS("maf_soma.rds")
+soma=readRDS("soma.filter.rds")
 
 col = c("Missense_Mutation" = "blue", "In_Frame_Ins" = "red", "Splice_Site" = "#008000","In_Frame_Del"="purple","Frame_Shift_Ins"="yellow",
         "Frame_Shift_Del"="cyan", "Nonsense_Mutation"="brown", "Multi_Hit"="orange","Translation_Start_Site"="pink")
