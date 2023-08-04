@@ -1,5 +1,5 @@
 library(maftools)
-setwd("~/Desktop/head_neck/")
+setwd("head_neck/")
 
 soma=readRDS("soma.filter.rds")
 
@@ -167,7 +167,7 @@ pr=input_matrix[which(colnames(input_matrix)%in%meta.pr$Tumor_Sample_Barcode)]
 lf.s=lf[,order(match(colnames(lf),meta.lf$Tumor_Sample_Barcode))]
 pr.s=pr[,order(match(colnames(pr),meta.pr$Tumor_Sample_Barcode))]
 
-pdf("~/Desktop/somatic_Locoregional Failure.pdf",20,10)
+pdf("somatic_Locoregional Failure.pdf",20,10)
 t01=oncoPrint(lf.s[which(rownames(lf.s)%in%comp2f$Hugo_Symbol),],remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun, col = col,
               #bottom_annotation = ha2,top_annotation=ha01,
@@ -324,7 +324,7 @@ input_matrix.path.pr$pw=input_matrix.path.s$pw
 input_matrix.path2.lf=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%meta.lf$Tumor_Sample_Barcode)]
 input_matrix.path2.lf$pw=input_matrix.path.s$pw
 
-pdf("~/Desktop/path.Locoregional_Failure.pdf",20,20)
+pdf("path.Locoregional_Failure.pdf",20,20)
 
 t01=oncoPrint(input_matrix.path2.lf[,-ncol(input_matrix.path2.lf)], remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun, col = col,row_order =input_matrix.path.pr$gene,row_split=input_matrix.path.pr$pw, 
@@ -386,7 +386,7 @@ pathway010.ann1[is.na(pathway010.ann1)]<-""
 
 
 
-pdf("~/Desktop/pathway.locoregional.failure.agg..v3.pdf",15,5)
+pdf("pathway.locoregional.failure.agg..v3.pdf",15,5)
 t01=oncoPrint(pathway010.ann1, remove_empty_columns = FALSE, remove_empty_rows = F,top_annotation = NULL,
               alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
               show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="No L/R failure (21)")
@@ -411,7 +411,7 @@ prog_geneset = survGroup(maf = soma, genes = soma@gene.summary$Hugo_Symbol, gene
 
 prog.f1=prog_geneset[which(prog_geneset$P_value<0.1),]
 
-pdf("~/Desktop/survival_gene_set1.stand.pdf")
+pdf("survival_gene_set1.stand.pdf")
 
 for (i in 1:nrow(prog.f1)){
   mafSurvGroup(maf = soma, geneSet = prog.f1$Gene_combination[i],time = "OS.Time.to.death.or.last.FU", Status = "OS.Event")
