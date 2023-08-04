@@ -4,11 +4,11 @@ library(maftools)
 
 soma=readRDS("soma.filter.rds")
 
-pdf("~/Desktop/tmb.pdf")
+pdf("tmb.pdf")
 tmb=tmb(soma)
 dev.off()
 
-meta=read.table("/Users/ysong/Desktop/P_Tran_ref/head_neck/20230511_GENOMIC DATA.txt",sep="\t",header=T)
+meta=read.table("P_Tran_ref/head_neck/20230511_GENOMIC DATA.txt",sep="\t",header=T)
 
 meta0=soma@clinical.data
 foo <- data.frame(do.call('rbind', strsplit(as.character(meta0$Tumor_Sample_Barcode),'_',fixed=TRUE)))
@@ -33,7 +33,7 @@ tmb.meta$PFS.Event=as.factor(tmb.meta$PFS.Event)
 tmb.meta$DMFS.Event=as.factor(tmb.meta$DMFS.Event)
 tmb.meta$P16.Status.Upfront..OPX.only.=as.factor(tmb.meta$P16.Status.Upfront..OPX.only.)
 library(ggpubr)
-pdf("~/Desktop/tmb_tissue_label.pdf")
+pdf("tmb_tissue_label.pdf")
 ggplot(tmb.meta,aes(x=Tissue.Label..1.upfront..2.recurrence.,y=total_perMB))+geom_boxplot()+  geom_jitter(shape=16, position=position_jitter(0.2))+ stat_compare_means()
 ggplot(tmb.meta,aes(x=PFS.Event,y=total_perMB))+geom_boxplot()+   geom_jitter(shape=16, position=position_jitter(0.2))+ stat_compare_means()
 ggplot(tmb.meta,aes(x=DMFS.Event,y=total_perMB))+geom_boxplot()+  geom_jitter(shape=16, position=position_jitter(0.2))+ stat_compare_means()
@@ -204,7 +204,7 @@ prog_geneset = survGroup(maf = soma, genes = soma@gene.summary$Hugo_Symbol, gene
 
 prog.f1=prog_geneset[which(prog_geneset$P_value<0.1),]
 
-pdf("~/Desktop/survival_gene_set1.PFS.pdf")
+pdf("survival_gene_set1.PFS.pdf")
 
 for (i in 1:nrow(prog.f1)){
   mafSurvGroup(maf = soma, geneSet = prog.f1$Gene_combination[i],time = "PFS.Time.to.any.progression", Status = "PFS.Event")
@@ -212,6 +212,6 @@ for (i in 1:nrow(prog.f1)){
 dev.off()
 
 
-pdf("~/Desktop/rnx1.pdf")
+pdf("rnx1.pdf")
 oncoplot(soma,genes=c("ZNRF3","RNX1"))
 dev.off()
