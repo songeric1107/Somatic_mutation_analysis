@@ -1,18 +1,18 @@
 library(maftools);library(data.table)
-setwd("/Users/ysong/Desktop/combine_tempus_foundation/212")
-all.maf=readRDS("/Users/ysong/Desktop/pattern_failure/tempus_foundation_w_conflicP.417.s289.rds")
-write.table(all.maf@data,"~/Desktop/all_raw_maf_matrix.txt",sep='\t',quote=F)
+setwd("combine_tempus_foundation/212")
+all.maf=readRDS("pattern_failure/tempus_foundation_w_conflicP.417.s289.rds")
+write.table(all.maf@data,"all_raw_maf_matrix.txt",sep='\t',quote=F)
 
 
 
-meta=read.delim("/Users/ysong/Desktop/pattern_failure/meta_417_corrected.v1.filter.txt",sep="\t",header=T)
+meta=read.delim("pattern_failure/meta_417_corrected.v1.filter.txt",sep="\t",header=T)
 meta.s=meta[order(meta$Tumor_Sample_Barcode),]
 all.maf@clinical.data=setDT(meta.s)
 
 
 
 
-setwd("/Users/ysong/Desktop/pattern_failure/result_417")
+setwd("pattern_failure/result_417")
 
 test=mutCountMatrix(all.maf,removeNonMutated = F)
 
@@ -22,10 +22,10 @@ dev.off()
 
 met.maf=subsetMaf(all.maf,genes=all.maf@gene.summary$Hugo_Symbol,clinQuery = "Time..2.synchronous..1.metachronous==1")
 
-meta=read.delim("/Users/ysong/Desktop/pattern_failure/meta_417_corrected.v1.filter.txt",sep="\t",header=T)
+meta=read.delim("pattern_failure/meta_417_corrected.v1.filter.txt",sep="\t",header=T)
 meta.s=meta[order(meta$Tumor_Sample_Barcode),]
 
-input_matrix=read.table("/Users/ysong/Desktop/pattern_failure/result_417/onco_matrix.txt",sep="\t",row.names=1,check.names=F,header=T)
+input_matrix=read.table("pattern_failure/result_417/onco_matrix.txt",sep="\t",row.names=1,check.names=F,header=T)
 
 
 meta.metachro=meta.s[which(meta.s$Time..2.synchronous..1.metachronous==1),]
@@ -71,7 +71,7 @@ matrix.poly[is.na(matrix.poly)]<-""
 
 
 
-pdf("~/Desktop/somatic_metachronous.Paterns.of.Failure.417.pdf",20,20)
+pdf("somatic_metachronous.Paterns.of.Failure.417.pdf",20,20)
 
 
 t01=oncoPrint(matrix.nopro, remove_empty_columns = FALSE, remove_empty_rows = F,
@@ -252,7 +252,7 @@ input_matrix.path.oligo$pw=input_matrix.path.s$pw
 
 
 
-pdf("~/Desktop/path.new.pattern.failure.417.pdf",20,10)
+pdf("path.new.pattern.failure.417.pdf",20,10)
 
 t01=oncoPrint(input_matrix.path.nopro[-ncol(input_matrix.path.nopro)], remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun, col = col,row_order =input_matrix.path.pelvic$gene,row_split=input_matrix.path.nopro$pw, 
@@ -318,7 +318,7 @@ pathway020.ann1=pathway020.ann %>% mutate_if(is.numeric, ~1 * (. != 0))
 pathway030.ann1=pathway030.ann %>% mutate_if(is.numeric, ~1 * (. != 0))
 
 
-pdf("~/Desktop/pathway.pattern.failure.agg.417.pdf",20,6)
+pdf("pathway.pattern.failure.agg.417.pdf",20,6)
 t01=oncoPrint(pathway010.ann1, remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
               show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="no.progression.at.last.fu(48)")
@@ -362,7 +362,7 @@ rank01[,-c(1:2)] <- as.integer(rank01[,-c(1:2)] !="")
 rank01[rank01 == 0]<-""
 rank01[is.na(rank01)]<-""
 
-write.table(rank01,"~/Desktop/path_noprog.txt",sep="\t",quote=F)
+write.table(rank01,"path_noprog.txt",sep="\t",quote=F)
 
 setwd("~/Desktop")
 
@@ -490,7 +490,7 @@ pathway030.ann=merge(path[,1:3],pathway030,by.x="Pathway",by.y=0)
 #rownames(pathway030.ann)=paste(pathway030.ann$Pathway,"(",pathway030.ann$n_affected_genes,"/",pathway030.ann$N,")",sep="")
 rownames(pathway030.ann)=pathway030.ann$Pathway
 
-pdf("~/Desktop/pathway.new.pattern.pdf",20,6)
+pdf("pathway.new.pattern.pdf",20,6)
 t01=oncoPrint(pathway010.ann[-c(1:4)], remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
               show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="metachronous.noprogression(46)")
@@ -593,7 +593,7 @@ matrix.l3[is.na(matrix.l3)]<-""
 matrix.l4[is.na(matrix.l4)]<-""
 
 
-pdf("~/Desktop/somatic_tempus.fail_location_pathogenic.pdf",20,20)
+pdf("somatic_tempus.fail_location_pathogenic.pdf",20,20)
 
 
 t01=oncoPrint(matrix.l1, remove_empty_columns = FALSE, remove_empty_rows = F,
@@ -656,7 +656,7 @@ matrix.poly[is.na(matrix.poly)]<-""
 
 
 
-pdf("~/Desktop/somatic_Deek.Paterns.of.Failure.pdf",20,20)
+pdf("somatic_Deek.Paterns.of.Failure.pdf",20,20)
 
 
 t01=oncoPrint(matrix.ltc, remove_empty_columns = FALSE, remove_empty_rows = F,
