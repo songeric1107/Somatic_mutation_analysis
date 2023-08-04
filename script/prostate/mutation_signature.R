@@ -56,7 +56,7 @@ sig.sy=bp2$exposure$K6$exposure_mean
 #save(bp1,file="bp_sig.met.RData")
 
 bp1=bp2
-pdf("~/Desktop/qc_417.pdf")
+pdf("qc_417.pdf")
 bp_show_survey(bp1)
 bp_show_survey2(bp1, highlight =6)
 
@@ -154,7 +154,7 @@ color=c("red","green","pink","blue","orange","cyan")
 
 
 
-pdf("~/Desktop/count.ref.sbs.order.pattern.fail.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("count.ref.sbs.order.pattern.fail.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(Var2, levels = levels(sort.class))) %>%
@@ -194,7 +194,7 @@ color=c("red","green","pink","blue","orange","cyan")
 
 
 
-pdf("~/Desktop/count.ref.sbs.order.pelvic.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("count.ref.sbs.order.pelvic.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(Var2, levels = levels(sort.class))) %>%
@@ -225,7 +225,7 @@ ID.order <- genus.m1 %>%
   dplyr::arrange(desc(value)) %>%
   dplyr::pull(Tumor_Sample_Barcode)
 
-pdf("~/Desktop/count.ref.sbs.order.distant.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("count.ref.sbs.order.distant.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(Var2, levels = levels(sort.class))) %>%
@@ -255,7 +255,7 @@ ID.order <- genus.m1 %>%
   dplyr::arrange(desc(value)) %>%
   dplyr::pull(Tumor_Sample_Barcode)
 
-pdf("~/Desktop/count.ref.sbs.order.bone.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("count.ref.sbs.order.bone.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(Var2, levels = levels(sort.class))) %>%
@@ -285,7 +285,7 @@ ID.order <- genus.m1 %>%
   dplyr::arrange(desc(value)) %>%
   dplyr::pull(Tumor_Sample_Barcode)
 
-pdf("~/Desktop/count.ref.sbs.order.viseral.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("count.ref.sbs.order.viseral.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 
 
 p=genus.m1 %>%
@@ -348,7 +348,7 @@ color=c("red","green","pink","blue","orange","cyan")
 
 
 
-pdf("~/Desktop/ref.sbs.order.pattern.failure.rel.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.pattern.failure.rel.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -390,7 +390,7 @@ color=c("red","green","pink","blue","orange","cyan")
 
 
 
-pdf("~/Desktop/ref.sbs.order.pelvic.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.pelvic.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -430,7 +430,7 @@ color=c("red","green","pink","blue","orange","cyan")
 
 
 
-pdf("~/Desktop/ref.sbs.order.distant.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.distant.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -465,7 +465,7 @@ color=c("red","green","pink","blue","orange","cyan")
 
 
 
-pdf("~/Desktop/ref.sbs.order.bone.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.bone.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -500,7 +500,7 @@ color=c("red","green","pink","blue","orange","cyan")
 
 
 
-pdf("~/Desktop/ref.sbs.order.visceral.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.visceral.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -579,7 +579,7 @@ palette <- c(distinctColorPalette(n),"black")
 
 
 
-pdf("~/Desktop/avg_mutation.distant.pdf")
+pdf("avg_mutation.distant.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 
@@ -642,7 +642,7 @@ data.new=rbind(mutation.com.f1,df2)
 data.new$sig=factor(data.new$sig,levels=c("SBS1" ,   "SBS10b" , "SBS15" ,  "SBS87","others" ,   "unknown"))
 
 
-pdf("~/Desktop/avg_mutation.new.pelvic.pdf",10,10)
+pdf("avg_mutation.new.pelvic.pdf",10,10)
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 ggplot(data.new,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=c("green","pink","blue","orange","grey","black"))
@@ -680,7 +680,7 @@ n <- 72
 palette <- c(distinctColorPalette(n),"black")
 
 
-pdf("~/Desktop/avg_mutation.bone.pdf")
+pdf("avg_mutation.bone.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 
@@ -742,7 +742,7 @@ data.new=rbind(mutation.com.f1,df2)
 data.new$sig=factor(data.new$sig,levels=c("SBS1" ,   "SBS10b" , "SBS15" ,  "SBS87","others" ,   "unknown"))
 
 
-pdf("~/Desktop/avg_mutation.new.bone.pdf",10,10)
+pdf("avg_mutation.new.bone.pdf",10,10)
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 ggplot(data.new,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=c("green","pink","blue","orange","grey","black"))
@@ -760,7 +760,7 @@ palette <- c(distinctColorPalette(n),"black")
 
 
 
-pdf("~/Desktop/avg_mutation.bone.pdf")
+pdf("avg_mutation.bone.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 
@@ -823,7 +823,7 @@ data.new=rbind(mutation.com.f1,df2)
 data.new$sig=factor(data.new$sig,levels=c("SBS1" ,   "SBS10b" , "SBS15" ,  "SBS87","others" ,   "unknown"))
 
 
-pdf("~/Desktop/avg_mutation.new.visceral.pdf",10,10)
+pdf("avg_mutation.new.visceral.pdf",10,10)
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 ggplot(data.new,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=c("green","pink","blue","orange","grey","black"))
@@ -904,7 +904,7 @@ data.new=data.new[c(4:18,1:3),]
 data.new$sig=factor(data.new$sig,levels=c("SBS1" ,   "SBS10b" , "SBS15" ,  "SBS87","others" ,   "unknown"))
 
 
-pdf("~/Desktop/avg_mutation.new.pattern.pdf",10,10)
+pdf("avg_mutation.new.pattern.pdf",10,10)
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 ggplot(data.new,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=c("green","pink","blue","orange","grey","black"))
@@ -964,7 +964,7 @@ palette <- distinctColorPalette(n)
 
 
 
-pdf("~/Desktop/avg_mutation.pdf")
+pdf("avg_mutation.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 
@@ -1015,7 +1015,7 @@ rownames(taxmat)=taxmat$rownames.input_matrix.
 
 metadata=fit.ann1[1:6]
 
-
+######do not use###############
 OTUALL = otu_table(input_matrix, taxa_are_rows = TRUE)
 
 TAXALL=tax_table(as.matrix(taxmat))
@@ -1065,11 +1065,11 @@ ordination = ordinate(ps, method="MDS", distance=bray_dist)
 plot_ordination(ps, ordination,color="Pelvic.Node.fail.location") + theme(aspect.ratio=1)
 
 
-pdf("~/Desktop/cordinate.pdf")    
+pdf("cordinate.pdf")    
 plot_ordination(ps, ordination,color="Pelvic.Node.fail.location") + theme(aspect.ratio=1) + geom_point(size = 5)
 
 dev.off()
-
+#################################################
 #fit.ann1=fit.ann1[which(rowSums(fit.ann1[-c(1:6)])>0),]
 
 fit.ann1m=melt(fit.ann1[-ncol(fit.ann1)],id.vars=c(colnames(fit.ann1[,1:6])))
@@ -1086,7 +1086,7 @@ sub=data.f[,c(73:74,113)]
 pca <- prcomp(t(data.f), 
               scale = TRUE)
 
-pdf("~/Desktop/pca.pelvic.pdf")
+pdf("pca.pelvic.pdf")
 fviz_pca_biplot(pca,habillage =fit.ann.ref$Pelvic.Node.fail.location,labelsize = 2, repel = TRUE)+
   ylim(-5,5)+xlim(-10,10)+
   theme(text = element_text(size = 7.5),
@@ -1096,7 +1096,7 @@ fviz_pca_biplot(pca,habillage =fit.ann.ref$Pelvic.Node.fail.location,labelsize =
 dev.off()
 
 
-pdf("~/Desktop/pca.Distant.Node.pdf")
+pdf("pca.Distant.Node.pdf")
 
 fviz_pca_biplot(pca,habillage =fit.ann.ref$Distant.Node,labelsize = 3, repel = TRUE)+
   ylim(-10,10)+xlim(-15,15)+
@@ -1152,7 +1152,7 @@ dev.off()
 
 
 
-pdf("~/Desktop/ref.sbs.order.pelvic.node.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.pelvic.node.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -1202,7 +1202,7 @@ ID.order <- genus.m1 %>%
 color=c("red","green","pink","blue","orange","cyan")
 
 
-pdf("~/Desktop/ref.sbs.order.pattern.failure.v2.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.pattern.failure.v2.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -1269,7 +1269,7 @@ ID.order <- genus.m1 %>%
 color=c("red","green","pink","blue","orange","cyan")
 
 
-pdf("~/Desktop/ref.sbs.order.distant.node.v2.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.distant.node.v2.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -1380,7 +1380,7 @@ ID.order <- genus.m1 %>%
 
 color=c("red","green","pink","blue","orange","cyan","black")
 
-pdf("~/Desktop/denovo.sbs.order.pattern.failer.w.unknown.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("denovo.sbs.order.pattern.failer.w.unknown.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -1425,7 +1425,7 @@ laml.sign <- estimateSignatures(mat = all.tnm ,
 
 
 
-pdf("~/Desktop/denovo.sbs.order.pelvic.node.w.unknown.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("denovo.sbs.order.pelvic.node.w.unknown.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -1543,7 +1543,7 @@ palette <- c(distinctColorPalette(n),"black")
 
 
 
-pdf("~/Desktop/avg_mutation_pattern_denovo.rel.pdf")
+pdf("avg_mutation_pattern_denovo.rel.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 
@@ -1583,7 +1583,7 @@ palette <- c(distinctColorPalette(n),"black")
 
 
 
-pdf("~/Desktop/avg_mutation_denovo.rel.pdf")
+pdf("avg_mutation_denovo.rel.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 
@@ -1627,7 +1627,7 @@ ID.order <- genus.m1 %>%
 
 
 
-pdf("~/Desktop/denovo.rel.sbs.order.distant.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("denovo.rel.sbs.order.distant.node.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -1672,7 +1672,7 @@ palette <- c(distinctColorPalette(n),"black")
 
 
 
-pdf("~/Desktop/avg_mutation_denovo.distant_node.rel.pdf")
+pdf("avg_mutation_denovo.distant_node.rel.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 
@@ -1715,7 +1715,7 @@ ID.order <- genus.m1 %>%
 
 
 
-pdf("~/Desktop/denovo.rel.sbs.order.bone.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("denovo.rel.sbs.order.bone.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -1760,7 +1760,7 @@ palette <- c(distinctColorPalette(n),"black")
 
 
 
-pdf("~/Desktop/avg_mutation_denovo.bone.rel.pdf")
+pdf("avg_mutation_denovo.bone.rel.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 
@@ -1802,7 +1802,7 @@ ID.order <- genus.m1 %>%
 
 
 
-pdf("~/Desktop/denovo.rel.sbs.order.visceral.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("denovo.rel.sbs.order.visceral.count.w.mutation.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = levels(sort.class))) %>%
@@ -1847,7 +1847,7 @@ palette <- c(distinctColorPalette(n),"black")
 
 
 
-pdf("~/Desktop/avg_mutation_denovo.visceral.rel.pdf")
+pdf("avg_mutation_denovo.visceral.rel.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=color)
 
@@ -2001,7 +2001,7 @@ palette <- distinctColorPalette(n)
 
 
 
-pdf("~/Desktop/avg_mutation.pdf")
+pdf("avg_mutation.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 
@@ -2061,7 +2061,7 @@ ID.order <- genus.m1 %>%
 color=c("red","green","pink","blue","orange","cyan")
 
 
-pdf("~/Desktop/ref.sbs.order.bone.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.bone.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2146,7 +2146,7 @@ ID.order <- genus.m1 %>%
 color=c("red","green","pink","blue","orange","cyan")
 
 
-pdf("~/Desktop/ref.sbs.order.bone.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.bone.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2232,7 +2232,7 @@ ID.order <- genus.m1 %>%
 color=c("red","green","pink","blue","orange","cyan")
 
 
-pdf("~/Desktop/ref.sbs.order.pattern.failure.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.pattern.failure.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2279,7 +2279,7 @@ n <- 74
 palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.order.pelvic.node.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.pelvic.node.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2314,7 +2314,7 @@ library(randomcoloR)
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.order.Bone.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.Bone.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2350,7 +2350,7 @@ ID.order <- genus.m1 %>%
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.order.visceral.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.visceral.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2385,7 +2385,7 @@ library(randomcoloR)
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.order.distance.node.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.distance.node.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2419,7 +2419,7 @@ library(randomcoloR)
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.order.pattern.failure.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.pattern.failure.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2472,7 +2472,7 @@ ID.order <- genus.m1 %>%
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.match.pelvic_node.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.match.pelvic_node.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2524,7 +2524,7 @@ ID.order <- genus.m1 %>%
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.match.visceral.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.match.visceral.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2575,7 +2575,7 @@ ID.order <- genus.m1 %>%
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.match.bone.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.match.bone.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2626,7 +2626,7 @@ ID.order <- genus.m1 %>%
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.match.distant.node.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.match.distant.node.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2678,7 +2678,7 @@ ID.order <- genus.m1 %>%
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.match.patter.failure.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.match.patter.failure.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2734,7 +2734,7 @@ ID.order <- genus.m1 %>%
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.match.patter.failure.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.match.patter.failure.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2765,7 +2765,7 @@ fit.ann.ref$Tumor_Sample_Barcode=gsub("-T","",fit.ann.ref$Tumor_Sample_Barcode)
 
 fit.ann1=fit.ann.ref[-c(2:46,51:53)]
 
-pdf("~/Desktop/ref.sbs.all.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=105.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.all.count.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=105.9/2.54 * 1,pagecentre=FALSE)
 fit.ann1t=melt(fit.ann1,id.vars=colnames(fit.ann1)[1:6])
   p=ggplot(fit.ann1t,aes(x = Tumor_Sample_Barcode, y = value, fill = variable))+ labs(fill = "variable") +theme(axis.text.x = element_text(angle = 90, size = 10,hjust = 1,vjust=1),axis.text.y = element_text(size=10))+xlab("")+
   geom_bar(stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_grid(variable~New.Pattern.of.Failure..1.oligoprogressor..2.polyprogressor..3.no.progression.at.last.fu.,scale="free")
@@ -2812,7 +2812,7 @@ ID.order <- genus.m1 %>%
 #palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.match.patter.failure.pattern9.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.match.patter.failure.pattern9.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2885,7 +2885,7 @@ n <- 74
 palette <- distinctColorPalette(n)
 
 
-pdf("~/Desktop/ref.sbs.order.visceral.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
+pdf("ref.sbs.order.visceral.pdf",paper="special",  pointsize=10,  width=55.7/2.54,height=15.9/2.54 * 1,pagecentre=FALSE)
 p=genus.m1 %>%
   mutate(sample = factor(Tumor_Sample_Barcode, levels = ID.order)) %>%
   mutate(variable = factor(variable, levels = rev(sort.class))) %>%
@@ -2938,7 +2938,7 @@ fit.new.m=melt(mat.new,id.vars=c(colnames(mat.new[,1:6])))
 
 ##################################
 
-write.table(fit.sig.raw,"~/Desktop/raw_signature.txt",sep='\t',quote=F)
+write.table(fit.sig.raw,"raw_signature.txt",sep='\t',quote=F)
 
 
 sub=bp1$object$K6
@@ -2971,7 +2971,7 @@ sub1am=melt(as.matrix(sub1ab[1:2,]))
 
 
 
-pdf("~/Desktop/pelvic_feature.pdf")
+pdf("pelvic_feature.pdf")
 
 # Grouped
 
@@ -3028,7 +3028,7 @@ sub1am=melt(as.matrix(sub1ab[1:2,]))
 
 
 
-pdf("~/Desktop/distant.node_feature.pdf")
+pdf("distant.node_feature.pdf")
 
 # Grouped
 
@@ -3062,7 +3062,7 @@ sub1am=melt(as.matrix(sub1ab[1:2,]))
 
 
 
-pdf("~/Desktop/visceral_feature.pdf")
+pdf("visceral_feature.pdf")
 
 # Grouped
 
@@ -3094,7 +3094,7 @@ sub1am=melt(as.matrix(sub1ab[,]))
 
 
 
-pdf("~/Desktop/pattern_failure.pdf")
+pdf("pattern_failure.pdf")
 
 # Grouped
 
@@ -3168,7 +3168,7 @@ if (require(pheatmap)) {
 
 dev.off()
 
-pdf("~/Desktop/signature6.417.pdf",20,5)
+pdf("signature6.417.pdf",20,5)
 show_sig_profile(obj, mode = "SBS", style = "cosmic")
 obj <- bp_get_sig_obj(bp1, 6)
 sim <- get_sig_similarity(obj, sig_db = "SBS")
@@ -3184,7 +3184,7 @@ dev.off()
 
 
 
-pdf("~/Desktop/signature6.417.sig9.pdf",20,10)
+pdf("signature6.417.sig9.pdf",20,10)
 show_sig_profile(obj1, mode = "SBS", style = "cosmic")
 obj <- bp_get_sig_obj(bp1, 9)
 sim <- get_sig_similarity(obj, sig_db = "SBS")
@@ -3244,7 +3244,7 @@ write.table(stat.test,"stat.test.sig6.pattern_failure.417.txt",sep="\t",quote=F)
 
 
 
-pdf('~/Desktop/signature2_box.all.sig6.pattern_failure.pdf',10,3)
+pdf('signature2_box.all.sig6.pattern_failure.pdf',10,3)
 
 #ggplot(sig.all.matrixt1m,aes(x=variable,y=value,fill=Time..2.synchronous..1.metachronous.))+ geom_boxplot()
 
@@ -3267,7 +3267,7 @@ sig.all.matrixt1m$Bone=gsub("1","Bone",sig.all.matrixt1m$Bone)
 sig.all.matrixt1m$Visceral=gsub("1","Visceral",sig.all.matrixt1m$Visceral)
 
 
-pdf('~/Desktop/signature2_failure.location.417.pdf',10,3)
+pdf('signature2_failure.location.417.pdf',10,3)
 ggplot(sig.all.matrixt1m[which(sig.all.matrixt1m$Pelvic.Node.fail.location%in%c(0,"Pelvic.node")),],aes(x=variable,y=value,fill=Pelvic.Node.fail.location))+ geom_boxplot()+theme(legend.position = "bottom")+ theme(legend.text=element_text(size=6)) 
 ggplot(sig.all.matrixt1m[which(sig.all.matrixt1m$Distant.Node%in%c(0,"Distant.node")),],aes(x=variable,y=value,fill=Distant.Node))+ geom_boxplot()+theme(legend.position = "bottom")+ theme(legend.text=element_text(size=6)) 
 ggplot(sig.all.matrixt1m[which(sig.all.matrixt1m$Bone%in%c(0,"Bone")),],aes(x=variable,y=value,fill=Bone))+ geom_boxplot()+theme(legend.position = "bottom")+ theme(legend.text=element_text(size=6)) 
@@ -3327,7 +3327,7 @@ ha1=HeatmapAnnotation(location_failure=level$group,col = list(location_failure= 
 
 scaled_mat = t(scale(t(sub0t)))
 
-pdf("~/Desktop/mutation.sig.heatmap.pdf",20,5)
+pdf("mutation.sig.heatmap.pdf",20,5)
 Heatmap(scaled_mat,top_annotation=ha1)
 Heatmap(scaled_mat,column_order=colnames(sub0t),top_annotation=ha1)
 dev.off()
@@ -3419,7 +3419,7 @@ dev.off()
 
 
 
-pdf("~/Desktop/signature.all.bootrap.consense.330.pdf",20,10)
+pdf("signature.all.bootrap.consense.330.pdf",20,10)
 show_sig_exposure( sub)
 
 sim <- get_sig_similarity(sub, sig_db = "SBS")
