@@ -1,5 +1,5 @@
-library(maftools);library(data.table)
-setwd("combine_tempus_foundation/212")
+library(maftools);library(data.table);library(ComplexHeatmap)
+
 all.maf=readRDS("pattern_failure/tempus_foundation_w_conflicP.417.s289.rds")
 write.table(all.maf@data,"all_raw_maf_matrix.txt",sep='\t',quote=F)
 
@@ -20,19 +20,16 @@ pdf("all.maf.pdf")
 oncoplot(all.maf,removeNonMutated = F,writeMatrix = T,genes=all.maf@gene.summary$Hugo_Symbol)
 dev.off()
 
+
 met.maf=subsetMaf(all.maf,genes=all.maf@gene.summary$Hugo_Symbol,clinQuery = "Time..2.synchronous..1.metachronous==1")
 
-meta=read.delim("meta_417_corrected.v1.filter.txt",sep="\t",header=T)
-meta.s=meta[order(meta$Tumor_Sample_Barcode),]
+#meta=read.delim("meta_417_corrected.v1.filter.txt",sep="\t",header=T)
+#meta.s=meta[order(meta$Tumor_Sample_Barcode),]
 
 input_matrix=read.table("onco_matrix.txt",sep="\t",row.names=1,check.names=F,header=T)
 
 
 meta.metachro=meta.s[which(meta.s$Time..2.synchronous..1.metachronous==1),]
-
-
-
-
 
 oligo=meta.metachro[which(meta.metachro$New.Pattern.of.Failure..1.oligoprogressor..2.polyprogressor..3.no.progression.at.last.fu.==1),]
 
@@ -43,9 +40,9 @@ nopro.maf=subsetMaf(maf = met.maf, tsb=  nopro$id)
 oligo.maf=subsetMaf(maf = met.maf, tsb=  oligo$id)
 poly.maf=subsetMaf(maf = met.maf, tsb=  poly$id)
 
-stat1=mafCompare(nopro.maf,oligo.maf,minMut=3)
-stat2=mafCompare(nopro.maf,poly.maf,minMut=3)
-stat3=mafCompare(poly.maf,oligo.maf,minMut=3)
+#stat1=mafCompare(nopro.maf,oligo.maf,minMut=3)
+#stat2=mafCompare(nopro.maf,poly.maf,minMut=3)
+#stat3=mafCompare(poly.maf,oligo.maf,minMut=3)
 
 input_matrix1=data.frame(t(input_matrix))
 
@@ -69,7 +66,7 @@ matrix.oligo[is.na(matrix.oligo)]<-""
 
 matrix.poly[is.na(matrix.poly)]<-""
 
-
+###create oncoplot using 
 
 pdf("somatic_metachronous.Paterns.of.Failure.417.pdf",20,20)
 
@@ -161,6 +158,9 @@ pw_gi = data.frame(
   stringsAsFactors = F
 )
 
+
+##create aggregated  mutation count of each pathway.
+
 pw = rbind(pw_rt, pw_cc,pw_wnt,pw_tp,pw_hippo,pw_tgf,pw_chre,pw_myc,pw_notch,pw_gi)
 
 pw_col = RColorBrewer::brewer.pal(n = 11, name = 'Set3')[1:11]
@@ -245,12 +245,9 @@ input_matrix.path.poly$pw=input_matrix.path.s$pw
 input_matrix.path.oligo=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(matrix.oligo))]
 input_matrix.path.oligo$pw=input_matrix.path.s$pw
 
+##create the oncoplot of genes involved in each oncogenic pathway
 
-
-
-
-
-
+library(ComplexHeatmap)
 
 pdf("path.new.pattern.failure.417.pdf",20,10)
 
@@ -288,7 +285,7 @@ dev.off()
 
 
 
-
+##aggregate mutation rate together as pathway mutation rate.
 
 
 df1=input_matrix.path1[-c(1,2,ncol(input_matrix.path1))]
@@ -364,7 +361,7 @@ rank01[is.na(rank01)]<-""
 
 write.table(rank01,"path_noprog.txt",sep="\t",quote=F)
 
-setwd("~/Desktop")
+
 
 rank01[-c(1:2)] %>% mutate_if(is.character,as.numeric)
 rank01[is.na(rank01)]<-""
@@ -511,7 +508,7 @@ dev.off()
 
 
 
-#########################################
+#########################################different location of failure
 
 
 
@@ -629,56 +626,6 @@ t04=oncoPrint(matrix.l4, remove_empty_columns = FALSE, remove_empty_rows = F,
 t01+t02+t03+t04
 #t01s
 #t02s
-dev.off()
-
-
-ltc=meta.sub[which(meta.sub$Deek.Paterns.of.Failure..1.LTC..2.olgio..3.poly.0.blank.==1),]
-
-oligo=meta.sub[which(meta.sub$Deek.Paterns.of.Failure..1.LTC..2.olgio..3.poly.0.blank.==2),]
-poly=meta.sub[which(meta.sub$Deek.Paterns.of.Failure..1.LTC..2.olgio..3.poly.0.blank.==3),]
-
-
-
-
-matrix.ltc=input_matrix[,which(colnames(input_matrix)%in%ltc$id)]
-
-matrix.oligo=input_matrix[,which(colnames(input_matrix)%in%oligo$id)]
-
-matrix.poly=input_matrix[,which(colnames(input_matrix)%in%poly$id)]
-
-
-
-matrix.ltc[is.na(matrix.ltc)]<-""
-
-matrix.oligo[is.na(matrix.oligo)]<-""
-
-matrix.poly[is.na(matrix.poly)]<-""
-
-
-
-pdf("somatic_Deek.Paterns.of.Failure.pdf",20,20)
-
-
-t01=oncoPrint(matrix.ltc, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="LTC(153)")
-#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#             alter_fun = alter_fun, col = col,
-#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
-
-
-t02=oncoPrint(matrix.oligo, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="OLIGO(34)")
-#t02s=oncoPrint(matrix.crpc[which(rownames(matrix.crpc)%in%unique(c(f5$gen1,f5$gene2,f4$gen1,f4$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#              alter_fun = alter_fun, col = col,
-#             show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="crpc(94(77F+17F))")
-
-t03=oncoPrint(matrix.poly, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="ploy(33)")
-t01+t02+t03
-
 dev.off()
 
 
