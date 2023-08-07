@@ -68,6 +68,8 @@ dev.off()
 
 s2 <- get_sig_db("SBS")
 
+
+###map all the mutations to known SBS database
 fit.sig.raw=sig_fit(t(mt_tally_SNV$nmf_matrix), sig_index = "ALL",type="relative",sig_db="SBS")
 fit.sig.abs=sig_fit(t(mt_tally_SNV$nmf_matrix), sig_index = "ALL",sig_db="SBS")
 
@@ -565,7 +567,7 @@ data.new=rbind(mutation.com.f1,df2)
 data.new$sig=factor(data.new$sig,levels=c("SBS1" ,   "SBS10b" , "SBS15" ,  "SBS87","others" ,   "unknown"))
 
 
-pdf("~/Desktop/avg_mutation.new.distance.node.pdf",10,10)
+pdf("avg_mutation.new.distance.node.pdf",10,10)
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 ggplot(data.new,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=c("green","pink","blue","orange","grey","black"))
@@ -756,10 +758,6 @@ palette <- c(distinctColorPalette(n),"black")
 
 
 
-
-
-
-
 pdf("avg_mutation.bone.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
@@ -836,7 +834,7 @@ n <- 72
 palette <- c(distinctColorPalette(n),"black")
 
 
-pdf("~/Desktop/avg_mutation.visceral.pdf")
+pdf("avg_mutation.visceral.pdf")
 ggplot(mutation.com,aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 #ggplot(mutation.com[which(mutation.com$avg>0),],aes(x=group,y=avg,fill=sig))+geom_bar(position = "stack",stat = "identity", color="black", width = 0.6) +  scale_y_continuous(expand = c(0, 0))+ylab(element_text(size=16))+facet_wrap(~group,scale="free_x")+ylab("Proportion")+ scale_fill_manual(values=palette)
 
@@ -992,10 +990,6 @@ fit.ann1=fit.ann1[which(fit.ann1$Pelvic.Node.fail.location!="na"),]
 
 
 
-
-
-
-
 fit.ann1=fit.ann1[which(fit.ann1$posmax!="NA"),]
 rownames(fit.ann1)=fit.ann1$Tumor_Sample_Barcode
 
@@ -1015,96 +1009,7 @@ rownames(taxmat)=taxmat$rownames.input_matrix.
 
 metadata=fit.ann1[1:6]
 
-######do not use###############
-OTUALL = otu_table(input_matrix, taxa_are_rows = TRUE)
 
-TAXALL=tax_table(as.matrix(taxmat))
-
-rownames(metadata)=metadata$Tumor_Sample_Barcode
-sampledata = sample_data(metadata)
-
-match(rownames(sampledata),colnames(input_matrix))
-
-
-ps <- phyloseq(OTUALL, 
-               TAXALL,sampledata)
-
-alph.div=estimate_richness(ps,measures=c("Shannon"))
-alph.div1=cbind(sample_data(ps),alph.div)
-
-                                              
-result=aov(Shannon~Pelvic.Node.fail.location,alph.div1)                                                                           
-summary(result)
-pdf("~/Desktop/shannon.pdf")
-plot_richness(ps,x="Pelvic.Node.fail.location",color="Pelvic.Node.fail.location",measures=c(  "Shannon","Simpson"))+ geom_violin(width=1.0) +
-  geom_boxplot(width=0.1, alpha=0.2) 
-
-
-
-dev.off()
-
-
-braycurtis <- vegdist(fit.ann1[c(7:78)])
-mat1=as.matrix(braycurtis)[fit.ann1$Pelvic.Node.fail.location=="Pelvic.Node(NO,81)",fit.ann1$Pelvic.Node.fail.location=="Pelvic.Node(Yes,33)"]
-mat2=as.dist(as.matrix(braycurtis)[fit.ann1$Pelvic.Node.fail.location=="Pelvic.Node(NO,81)",fit.ann1$Pelvic.Node.fail.location=="Pelvic.Node(Yes,33)"])
-
-mat1m=melt(as.matrix(mat1))
-
-
-bray_dist = phyloseq::distance(ps, method="bray", weighted=F)
-
-meandist(braycurtis, df$PoolNumber)
-
-
-
-sampledf <- data.frame(sample_data(ps ))
-
-adonis2(bray_dist  ~ Pelvic.Node.fail.location, data = sampledf)
-
-ordination = ordinate(ps, method="MDS", distance=bray_dist)
-plot_ordination(ps, ordination,color="Pelvic.Node.fail.location") + theme(aspect.ratio=1)
-
-
-pdf("cordinate.pdf")    
-plot_ordination(ps, ordination,color="Pelvic.Node.fail.location") + theme(aspect.ratio=1) + geom_point(size = 5)
-
-dev.off()
-#################################################
-#fit.ann1=fit.ann1[which(rowSums(fit.ann1[-c(1:6)])>0),]
-
-fit.ann1m=melt(fit.ann1[-ncol(fit.ann1)],id.vars=c(colnames(fit.ann1[,1:6])))
-
-
-
-data=t(fit.ann.ref[,-c(1:54)])
-
-data.f=data[which(rowSums(data)>0),]
-
-
-sub=data.f[,c(73:74,113)]
-
-pca <- prcomp(t(data.f), 
-              scale = TRUE)
-
-pdf("pca.pelvic.pdf")
-fviz_pca_biplot(pca,habillage =fit.ann.ref$Pelvic.Node.fail.location,labelsize = 2, repel = TRUE)+
-  ylim(-5,5)+xlim(-10,10)+
-  theme(text = element_text(size = 7.5),
-        axis.title = element_text(size = 7.5),
-        axis.text = element_text(size = 7.5))
-
-dev.off()
-
-
-pdf("pca.Distant.Node.pdf")
-
-fviz_pca_biplot(pca,habillage =fit.ann.ref$Distant.Node,labelsize = 3, repel = TRUE)+
-  ylim(-10,10)+xlim(-15,15)+
-  theme(text = element_text(size = 7.5),
-        axis.title = element_text(size = 7.5),
-        axis.text = element_text(size = 7.5))
-biplot(pca)
-dev.off()
 
 
 
