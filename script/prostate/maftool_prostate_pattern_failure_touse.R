@@ -5,14 +5,14 @@ write.table(all.maf@data,"all_raw_maf_matrix.txt",sep='\t',quote=F)
 
 
 
-meta=read.delim("pattern_failure/meta_417_corrected.v1.filter.txt",sep="\t",header=T)
+meta=read.delim("meta_417_corrected.v1.filter.txt",sep="\t",header=T)
 meta.s=meta[order(meta$Tumor_Sample_Barcode),]
 all.maf@clinical.data=setDT(meta.s)
 
 
 
 
-setwd("pattern_failure/result_417")
+#setwd("pattern_failure/result_417")
 
 test=mutCountMatrix(all.maf,removeNonMutated = F)
 
@@ -22,10 +22,10 @@ dev.off()
 
 met.maf=subsetMaf(all.maf,genes=all.maf@gene.summary$Hugo_Symbol,clinQuery = "Time..2.synchronous..1.metachronous==1")
 
-meta=read.delim("pattern_failure/meta_417_corrected.v1.filter.txt",sep="\t",header=T)
+meta=read.delim("meta_417_corrected.v1.filter.txt",sep="\t",header=T)
 meta.s=meta[order(meta$Tumor_Sample_Barcode),]
 
-input_matrix=read.table("pattern_failure/result_417/onco_matrix.txt",sep="\t",row.names=1,check.names=F,header=T)
+input_matrix=read.table("onco_matrix.txt",sep="\t",row.names=1,check.names=F,header=T)
 
 
 meta.metachro=meta.s[which(meta.s$Time..2.synchronous..1.metachronous==1),]
