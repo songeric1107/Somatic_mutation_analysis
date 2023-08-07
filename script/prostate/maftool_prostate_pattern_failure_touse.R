@@ -68,6 +68,51 @@ matrix.poly[is.na(matrix.poly)]<-""
 
 ###create oncoplot using 
 
+alter_fun = list(
+  background = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = "#CCCCCC", col = NA))
+  },
+  # big blue
+  Missense_Mutation = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Missense_Mutation"], col = NA))
+  },
+  # big red
+  In_Frame_Ins = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["In_Frame_Ins"], col = NA))
+  },
+  # small green
+  Splice_Site = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"),  
+              gp = gpar(fill = col["Splice_Site"], col = NA))},
+  
+  # small green
+  In_Frame_Del = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["In_Frame_Del"], col = NA))
+  },
+  
+  Frame_Shift_Ins= function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Frame_Shift_Ins"], col = NA))},
+  
+  Frame_Shift_Del= function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Frame_Shift_Del"], col = NA))},
+  Nonsense_Mutation= function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Nonsense_Mutation"], col = NA))},
+  Multi_Hit= function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Multi_Hit"], col = NA))}
+)
+
+
+
+
+
 pdf("somatic_metachronous.Paterns.of.Failure.417.pdf",20,20)
 
 
@@ -249,28 +294,35 @@ input_matrix.path.oligo$pw=input_matrix.path.s$pw
 
 library(ComplexHeatmap)
 
+
+col = c("Missense_Mutation" = "blue", "In_Frame_Ins" = "red", "Splice_Site" = "pink","In_Frame_Del"="purple","Frame_Shift_Ins"="yellow",
+        "Frame_Shift_Del"="green", "Nonsense_Mutation"="brown", "Multi_Hit"="orange")
+
+
+
 pdf("path.new.pattern.failure.417.pdf",20,10)
 
 t01=oncoPrint(input_matrix.path.nopro[-ncol(input_matrix.path.nopro)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,row_order =input_matrix.path.pelvic$gene,row_split=input_matrix.path.nopro$pw, 
-              #row_title_rot = switch(row_title_side[1], "left" = 0),
-              
-              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="no.progression.at.last.fu(48)")
+              alter_fun = alter_fun, col = col,row_order =rownames(input_matrix.path.nopro),row_split=input_matrix.path.nopro$pw, 
+   row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),
+column_title="no.progression.at.last.fu(48)")
 #t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
 #             alter_fun = alter_fun, col = col,
 #            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
 
 
 t02=oncoPrint(input_matrix.path.poly[-ncol(input_matrix.path.poly)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,row_order =input_matrix.path.node$gene,row_split=input_matrix.path,poly$pw, row_title_gp = gpar(fontsize = 6) ,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="polyprogressor(38)")
+              alter_fun = alter_fun, col = col,row_order =rownames(input_matrix.path.poly),row_split=input_matrix.path,poly$pw, row_title_gp = gpar(fontsize = 6) ,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),
+              column_title="polyprogressor(38)")
 #t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
 #             alter_fun = alter_fun, col = col,
 #            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
 
 t03=oncoPrint(input_matrix.path.oligo[-ncol(input_matrix.path.oligo)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,row_order =input_matrix.path.bone$gene,row_split=input_matrix.path.oligo$pw, row_title_gp = gpar(fontsize = 6) ,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="oligoprogressor(74)")
+              alter_fun = alter_fun, col = col,row_order =rownames(input_matrix.path.oligo),row_split=input_matrix.path.oligo$pw, row_title_gp = gpar(fontsize = 6) ,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),
+              column_title="oligoprogressor(74)")
 #t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
 #             alter_fun = alter_fun, col = col,
 #            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
@@ -500,6 +552,9 @@ t03=oncoPrint(pathway030.ann[-c(1:4)], remove_empty_columns = FALSE, remove_empt
 
 t01+t02+t03
 dev.off()
+
+
+
 
 
 
