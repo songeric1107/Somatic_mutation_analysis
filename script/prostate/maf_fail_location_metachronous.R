@@ -12,28 +12,98 @@ meta.s=meta[order(meta$Tumor_Sample_Barcode),]
 all.maf@clinical.data=setDT(meta.s)
 
 
-input_matrix=read.table("foundation_tempus_pathogen_comb.212.txt",sep="\t",header=T,row.names=1,check.names=F)
+input_matrix=read.table("onco_matrix.txt",sep="\t",row.names=1,check.names=F,header=T)
 
 
-meta.metachro=meta[which(meta$Time..2.synchronous..1.metachronous.==1),]
+meta.metachro=meta.s[which(meta.s$Time..2.synchronous..1.metachronous==1),]
+rownames(meta.metachro)=meta.metachro$Tumor_Sample_Barcode       
 
-meta.pfs=meta.metachro[which(meta.metachro$progression.within.1.year==1),]
-meta.pfsn=meta.metachro[which(meta.metachro$progression.within.1.year==0),]
-
-
-setwd("combine_tempus_foundation/212/")
-input_matrix=read.table("foundation_tempus_pathogen_comb.212.txt",sep="\t",header=T,row.names=1,check.names=F)
-#all.matrix=input_matrix[,which(colnames(input_matrix)%in%meta$id)]
-
-matrix.pfs=input_matrix[,which(colnames(input_matrix)%in%meta.pfs$id)]
+gene.interest=input_matrix[which(rownames(input_matrix)%in%c("SPOP","APC","CTNNB1","RNF43")),]
 
 
-matrix.pfs0=input_matrix[,which(colnames(input_matrix)%in%meta.pfsn$id)]
+`%notin%` <- Negate(`%in%`)
+
+meta.metachro$Pelvic.Node.fail.location=gsub("1","Pelvic.Node",meta.metachro$Pelvic.Node.fail.location)
+meta.metachro$Distant.Node=gsub("1","Distant.Node",meta.metachro$Distant.Node)
+meta.metachro$Bone=gsub("1","Bone",meta.metachro$Bone)
+meta.metachro$Visceral=gsub("1","Visceral",meta.metachro$Visceral)
 
 
-matrix.pfs[is.na(matrix.pfs)]<-""
 
-matrix.pfs0[is.na(matrix.pfs0)]<-""
+
+pel.meta=meta.metachro[which(meta.metachro$Pelvic.Node.fail.location%in%c(0,"Pelvic.Node")),]
+dis.meta=meta.metachro[which(meta.metachro$Distant.Node%in%c(0,"Distant.Node")),]
+bone.meta=meta.metachro[which(meta.metachro$Bone%in%c(0,"Bone")),]
+vis.meta=meta.metachro[which(meta.metachro$Visceral%in%c(0,"Visceral")),]
+
+pel.meta1=meta.metachro[which(meta.metachro$Pelvic.Node.fail.location%in%c(0)),]
+pel.meta2=meta.metachro[which(meta.metachro$Pelvic.Node.fail.location%in%c("Pelvic.Node")),]
+dis.meta1=meta.metachro[which(meta.metachro$Distant.Node%in%c(0)),]
+dis.meta2=meta.metachro[which(meta.metachro$Distant.Node%in%c("Distant.Node")),]
+
+bone.meta1=meta.metachro[which(meta.metachro$Bone%in%c(0)),]
+bone.meta2=meta.metachro[which(meta.metachro$Bone%in%c("Bone")),]
+vis.meta1=meta.metachro[which(meta.metachro$Visceral%in%c(0)),]
+vis.meta2=meta.metachro[which(meta.metachro$Visceral%in%c("Visceral")),]
+
+meta.maf=subsetMaf(all.maf,genes=all.maf@gene.summary$Hugo_Symbol,clinQuery = "Time..2.synchronous..1.metachronous==1")
+
+
+pel.maf=subsetMaf(maf = meta.maf, tsb=  as.character(pel.meta$Tumor_Sample_Barcode),mafObj=T)
+dis.maf=subsetMaf(maf = meta.maf, tsb=  as.character(dis.meta$Tumor_Sample_Barcode),mafObj=T)
+bone.maf=subsetMaf(maf = meta.maf, tsb=  as.character(bone.meta$Tumor_Sample_Barcode),mafObj=T)
+vis.maf=subsetMaf(maf = meta.maf, tsb=  as.character(vis.meta$Tumor_Sample_Barcode),mafObj=T)
+
+
+pel.maf1=subsetMaf(maf = meta.maf, tsb=  pel.meta1$Tumor_Sample_Barcode,mafObj=T)
+dis.maf1=subsetMaf(maf = meta.maf, tsb=  dis.meta1$Tumor_Sample_Barcode,mafObj=T)
+bone.maf1=subsetMaf(maf = meta.maf, tsb= bone.meta1$Tumor_Sample_Barcode,mafObj=T)
+vis.maf1=subsetMaf(maf = meta.maf, tsb=  vis.meta1$Tumor_Sample_Barcode,mafObj=T)
+
+
+pel.maf2=subsetMaf(maf = meta.maf, tsb=  pel.meta2$Tumor_Sample_Barcode,mafObj=T)
+dis.maf2=subsetMaf(maf = meta.maf, tsb= dis.meta2$Tumor_Sample_Barcode,mafObj=T)
+bone.maf2=subsetMaf(maf = meta.maf, tsb=  bone.meta2$Tumor_Sample_Barcode,mafObj=T)
+vis.maf2=subsetMaf(maf = meta.maf, tsb= vis.meta2$Tumor_Sample_Barcode,mafObj=T)
+
+stat1=mafCompare(pel.maf1,pel.maf2,minMut=3)
+stat2=mafCompare(dis.maf1,dis.maf2,minMut=3)
+stat3=mafCompare(bone.maf1,bone.maf2,minMut=3)
+stat4=mafCompare(vis.maf1,vis.maf2,minMut=3)
+
+
+input_matrix.location=input_matrix[colnames(input_matrix)%in%unique(c(rownames(pel.meta),rownames(dis.meta),rownames(bone.meta),rownames(vis.meta)))]
+
+matrix.pel=input_matrix[,which(colnames(input_matrix)%in%pel.meta$Tumor_Sample_Barcode)]
+
+matrix.dist=input_matrix[,which(colnames(input_matrix)%in%dis.meta$Tumor_Sample_Barcode)]
+
+matrix.bone=input_matrix[,which(colnames(input_matrix)%in%bone.meta$Tumor_Sample_Barcode)]
+
+matrix.vis=input_matrix[,which(colnames(input_matrix)%in%vis.meta$Tumor_Sample_Barcode)]
+
+
+
+
+pel.sub1=matrix.pel[,which(colnames(matrix.pel)%in%rownames(pel.meta[which(pel.meta$Pelvic.Node.fail.location==0),]))]
+pel.sub2=matrix.pel[,which(colnames(matrix.pel)%in%rownames(pel.meta[which(pel.meta$Pelvic.Node.fail.location=="Pelvic.Node"),]))]
+
+dist.sub1=matrix.dist[,which(colnames(matrix.dist)%in%rownames(dis.meta[which(dis.meta$Distant.Node==0),]))]
+dist.sub2=matrix.dist[,which(colnames(matrix.dist)%in%rownames(dis.meta[which(dis.meta$Distant.Node=="Distant.Node"),]))]
+
+
+
+bone.sub1=matrix.bone[,which(colnames(matrix.bone)%in%rownames(bone.meta[which(bone.meta$Bone==0),]))]
+bone.sub2=matrix.bone[,which(colnames(matrix.bone)%in%rownames(bone.meta[which(bone.meta$Bone=="Bone"),]))]
+
+vis.sub1=matrix.vis[,which(colnames(matrix.vis)%in%rownames(vis.meta[which(vis.meta$Visceral==0),]))]
+vis.sub2=matrix.vis[,which(colnames(matrix.vis)%in%rownames(vis.meta[which(vis.meta$Visceral=="Visceral"),]))]
+
+
+
+
+
+
 
 col = c("Missense_Mutation" = "blue", "In_Frame_Ins" = "red", "Splice_Site" = "pink","In_Frame_Del"="purple","Frame_Shift_Ins"="yellow",
         "Frame_Shift_Del"="green", "Nonsense_Mutation"="brown", "Multi_Hit"="orange")
@@ -79,95 +149,65 @@ alter_fun = list(
 )
 
 
-pdf("pfs.metachro.oncoprint.pdf",30,20)
+
+pdf("~/Desktop/location.failure.oncoprint.409.v1.pdf",20,20)
 
 
-t01=oncoPrint(matrix.pfs, remove_empty_columns = FALSE, remove_empty_rows = F,
+t00=oncoPrint(pel.sub1, remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="metachronous patients progression not within 1y(147)")
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure: no Pelvic Node (137)")
 #t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
 #             alter_fun = alter_fun, col = col,
-#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
-
-
-t02=oncoPrint(matrix.pfs0, remove_empty_columns = FALSE, remove_empty_rows = F,
+#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="non-crpc(184(95F+86T))")
+t01=oncoPrint(pel.sub2, remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="metachronous patients progression within 1y(29)")
-#t02s=oncoPrint(matrix.crpc[which(rownames(matrix.crpc)%in%unique(c(f5$gen1,f5$gene2,f4$gen1,f4$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#              alter_fun = alter_fun, col = col,
-#             show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="crpc(94(77F+17F))")
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure:Pelvic Node (40)")
+#t01
+
+t02=oncoPrint(dist.sub1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure:Distant Node no  (137)")
+#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
+#             alter_fun = alter_fun, col = col,
+#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="non-crpc(184(95F+86T))")
+
+t03=oncoPrint(dist.sub2, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure:Distant Node yes (40)")
 
 
+t04=oncoPrint(bone.sub1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure:Bone no (129)")
+#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
+#             alter_fun = alter_fun, col = col,
+#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="non-crpc(184(95F+86T))")
 
-t01+t02
+t05=oncoPrint(bone.sub2, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure:Bone yes (50)")
+
+t06=oncoPrint(vis.sub1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure:Visceral no (163)")
+#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
+#             alter_fun = alter_fun, col = col,
+#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="non-crpc(184(95F+86T))")
+
+t07=oncoPrint(vis.sub2, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure:Visceral yes (14)")
+#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
+#             alter_fun = alter_fun, col = col,
+#          
+
+t00+t01
+t02+t03
+t04+t05
+t06+t07
 #t01s
 #t02s
 dev.off()
-
-
-
-
-
-
-
-oligo=meta.metachro[which(meta.metachro$New.Pattern.of.Failure..1.oligoprogressor..2.polyprogressor..3.no.progression.at.last.fu.0.blank.==1),]
-
-poly=meta.metachro[which(meta.metachro$New.Pattern.of.Failure..1.oligoprogressor..2.polyprogressor..3.no.progression.at.last.fu.0.blank.==2),]
-nopro=meta.metachro[which(meta.metachro$New.Pattern.of.Failure..1.oligoprogressor..2.polyprogressor..3.no.progression.at.last.fu.0.blank.==3),]
-
-nopro.maf=subsetMaf(maf = met.maf, tsb=  nopro$id)
-oligo.maf=subsetMaf(maf = met.maf, tsb=  oligo$id)
-poly.maf=subsetMaf(maf = met.maf, tsb=  poly$id)
-
-stat1=mafCompare(nopro.maf,oligo.maf,minMut=3)
-stat2=mafCompare(nopro.maf,poly.maf,minMut=3)
-stat3=mafCompare(poly.maf,oligo.maf,minMut=3)
-
-
-matrix.nopro=input_matrix[,which(colnames(input_matrix)%in%nopro$id)]
-
-matrix.oligo=input_matrix[,which(colnames(input_matrix)%in%oligo$id)]
-
-matrix.poly=input_matrix[,which(colnames(input_matrix)%in%poly$id)]
-
-input_matrix.pf=cbind(matrix.nopro,matrix.oligo,matrix.poly)
-
-
-
-matrix.nopro[is.na(matrix.nopro)]<-""
-
-matrix.oligo[is.na(matrix.oligo)]<-""
-
-matrix.poly[is.na(matrix.poly)]<-""
-
-
-
-pdf("somatic_metachronous.Paterns.of.Failure.pdf",20,20)
-
-
-t01=oncoPrint(matrix.nopro, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="no.progression.at.last.fu(47)")
-#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#             alter_fun = alter_fun, col = col,
-#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
-
-
-t02=oncoPrint(matrix.poly, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="polyprogressor(36)")
-#t02s=oncoPrint(matrix.crpc[which(rownames(matrix.crpc)%in%unique(c(f5$gen1,f5$gene2,f4$gen1,f4$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#              alter_fun = alter_fun, col = col,
-#             show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="crpc(94(77F+17F))")
-
-t03=oncoPrint(matrix.oligo, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="oligoprogressor(73)")
-t01+t03+t02
-
-dev.off()
-
-
 
 
 
@@ -238,7 +278,6 @@ pw_col = RColorBrewer::brewer.pal(n = 11, name = 'Set3')[1:11]
 names(pw_col) = unique(pw$pw)
 
 
-
 col0 = c("1" = "red","2" = "red","3" = "red","4"="red","5"="red","6"="red")
 
 alter_fun0 = list(
@@ -287,15 +326,11 @@ alter_fun0 = list(
 
 
 
-
-input_matrix.path=merge(pw,input_matrix.pf,by.x="gene",by.y=0)
+input_matrix.path=merge(pw,input_matrix.location,by.x="gene",by.y=0)
 
 input_matrix.path[input_matrix.path== ''] <- NA
-
-
 input_matrix.path$count=rowSums(is.na(input_matrix.path[-c(1:2)]))
-
-input_matrix.path1=input_matrix.path[which(input_matrix.path$count!=155),]
+input_matrix.path1=input_matrix.path[which(input_matrix.path$count!=179),]
 
 input_matrix.path=input_matrix.path1[-ncol(input_matrix.path1)]
 
@@ -307,59 +342,108 @@ rownames(input_matrix.path.s)=input_matrix.path.s$gene
 
 input_matrix.path.s[is.na(input_matrix.path.s)]<-""
 
-input_matrix.path.nopro=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(matrix.nopro))]
-input_matrix.path.nopro$pw=input_matrix.path.s$pw
+input_matrix.path.pelvic=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(pel.sub1))]
+input_matrix.path.pelvic$pw=input_matrix.path.s$pw
 
-input_matrix.path.poly=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(matrix.poly))]
-input_matrix.path.poly$pw=input_matrix.path.s$pw
-
-input_matrix.path.oligo=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(matrix.oligo))]
-input_matrix.path.oligo$pw=input_matrix.path.s$pw
+input_matrix.path2.pelvic=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(pel.sub2))]
+input_matrix.path2.pelvic$pw=input_matrix.path.s$pw
 
 
+input_matrix.path.node=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(dist.sub1))]
+input_matrix.path.node$pw=input_matrix.path.s$pw
+
+input_matrix.path2.node=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(dist.sub2))]
+input_matrix.path2.node$pw=input_matrix.path.s$pw
+
+
+
+
+input_matrix.path.bone=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(bone.sub1))]
+input_matrix.path.bone$pw=input_matrix.path.s$pw
+
+input_matrix.path2.bone=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(bone.sub2))]
+input_matrix.path2.bone$pw=input_matrix.path.s$pw
+
+
+
+input_matrix.path.vis=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(vis.sub1))]
+input_matrix.path.vis$pw=input_matrix.path.s$pw
+
+input_matrix.path2.vis=input_matrix.path.s[which(colnames(input_matrix.path.s)%in%colnames(vis.sub2))]
+input_matrix.path2.vis$pw=input_matrix.path.s$pw
 
 
 
 
 
+pdf("pathway_gene_location_failure.pdf",10,10)
 
-pdf("path.new.pattern.failure.pdf",20,10)
-
-t01=oncoPrint(input_matrix.path.nopro[-ncol(input_matrix.path.nopro)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,row_order =input_matrix.path.pelvic$gene,row_split=input_matrix.path.nopro$pw, 
+t01=oncoPrint(input_matrix.path.pelvic[-ncol(input_matrix.path.pelvic)], remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,row_order =input_matrix.path.pelvic$gene,row_split=input_matrix.path.pelvic$pw, 
               #row_title_rot = switch(row_title_side[1], "left" = 0),
               
-              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="no.progression.at.last.fu(47)")
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),
+              column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure: no Pelvic Node (137)")
 #t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
 #             alter_fun = alter_fun, col = col,
-#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
+#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="non-crpc(184(95F+86T))")
 
-
-t02=oncoPrint(input_matrix.path.poly[-ncol(input_matrix.path.poly)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,row_order =input_matrix.path.node$gene,row_split=input_matrix.path,poly$pw, row_title_gp = gpar(fontsize = 6) ,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="polyprogressor(36)")
+t01a=oncoPrint(input_matrix.path2.pelvic[-ncol(input_matrix.path2.pelvic)], remove_empty_columns = FALSE, remove_empty_rows = F,
+               alter_fun = alter_fun, col = col,row_order =input_matrix.path2.pelvic$gene,row_split=input_matrix.path2.pelvic$pw, 
+               #row_title_rot = switch(row_title_side[1], "left" = 0),
+               
+               row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure: Pelvic Nod (22)")
 #t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
 #             alter_fun = alter_fun, col = col,
-#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
+#            show_co
 
-t03=oncoPrint(input_matrix.path.oligo[-ncol(input_matrix.path.oligo)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,row_order =input_matrix.path.bone$gene,row_split=input_matrix.path.oligo$pw, row_title_gp = gpar(fontsize = 6) ,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="oligoprogressor(73)")
+t02=oncoPrint(input_matrix.path.node[-ncol(input_matrix.path.node)], remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,row_order =input_matrix.path.node$gene,row_split=input_matrix.path.node$pw, row_title_gp = gpar(fontsize = 6) ,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Distant Node no  (137)")
+#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
+t02a=oncoPrint(input_matrix.path2.node[-ncol(input_matrix.path2.node)], remove_empty_columns = FALSE, remove_empty_rows = F,
+               alter_fun = alter_fun, col = col,row_order =input_matrix.path2.node$gene,row_split=input_matrix.path2.node$pw, row_title_gp = gpar(fontsize = 6) ,
+               show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure: Distance Node (22)")
 #t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
 #             alter_fun = alter_fun, col = col,
-#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
+#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="non-crpc(184(95F+86T))")
+
+t03=oncoPrint(input_matrix.path.bone[-ncol(input_matrix.path.bone)], remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,row_order =input_matrix.path.bone$gene,row_split=input_matrix.path.bone$pw, row_title_gp = gpar(fontsize = 6) ,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure:Bone no (129)")
+#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
+#             alter_fun = alter_fun, col = col,
+#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="non-crpc(184(95F+86T))")
+t03a=oncoPrint(input_matrix.path2.bone[-ncol(input_matrix.path2.bone)], remove_empty_columns = FALSE, remove_empty_rows = F,
+               alter_fun = alter_fun, col = col,row_order =input_matrix.path2.bone$gene,row_split=input_matrix.path2.bone$pw, row_title_gp = gpar(fontsize = 6) ,
+               show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =5),column_title="Location_of_failure:Bone yes (50)")
+
+#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
+#             alter_fun = alter_fun, col = col,
+#            show_column_n
 
 
+t04=oncoPrint(input_matrix.path.vis[-ncol(input_matrix.path.vis)], remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun, col = col,row_order =input_matrix.path.vis$gene,row_split=input_matrix.path.vis$pw, row_title_gp = gpar(fontsize = 6) ,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Visceral no (163)")
+#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
+#             alter_fun = alter_fun, col = col,
+#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="non-crpc(184(95F+86T))")
+t04a=oncoPrint(input_matrix.path2.vis[-ncol(input_matrix.path2.vis)], remove_empty_columns = FALSE, remove_empty_rows = F,
+               alter_fun = alter_fun, col = col,row_order =input_matrix.path2.vis$gene,row_split=input_matrix.path2.vis$pw, row_title_gp = gpar(fontsize = 6) ,
+               show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Visceral yes (14)")
+#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
+#             alter_fun = alter_fun, col = col,
+#            show_column_names = T
 
 
-t01+t03+t02
+t01+t01a
+t02+t02a
+t03+t03a
+t04+t04a
 #t01s
 #t02s
 dev.off()
-
-
-
-
 
 
 df1=input_matrix.path1[-c(1,2,ncol(input_matrix.path1))]
@@ -375,448 +459,88 @@ path.agg=aggregate(df3a[,-ncol(df3a)], by=list(pathway=df3a$pw), FUN=sum)
 rownames(path.agg)=path.agg$pathway
 
 
-pathway010.ann=path.agg[which(colnames(path.agg)%in%colnames(matrix.nopro))]
-pathway020.ann=path.agg[which(colnames(path.agg)%in%colnames(matrix.poly))]
-pathway030.ann=path.agg[which(colnames(path.agg)%in%colnames(matrix.oligo))]
+pathway010.ann=path.agg[which(colnames(path.agg)%in%colnames(input_matrix.path.pelvic))]
+pathway010.ann1=path.agg[which(colnames(path.agg)%in%colnames(input_matrix.path2.pelvic))]
+
+pathway020.ann=path.agg[which(colnames(path.agg)%in%colnames(input_matrix.path.node))]
+pathway020.ann1=path.agg[which(colnames(path.agg)%in%colnames(input_matrix.path2.node))]
+
+pathway030.ann=path.agg[which(colnames(path.agg)%in%colnames(input_matrix.path.bone))]
+pathway030.ann1=path.agg[which(colnames(path.agg)%in%colnames(input_matrix.path2.bone))]
+
+pathway040.ann=path.agg[which(colnames(path.agg)%in%colnames(input_matrix.path.vis))]
+pathway040.ann1=path.agg[which(colnames(path.agg)%in%colnames(input_matrix.path2.vis))]
+
+
+
 
 pathway010.ann[pathway010.ann == 0] <- ""
+pathway010.ann1[pathway010.ann1 == 0] <- ""
+
 pathway020.ann[pathway020.ann == 0] <- ""
+
+pathway020.ann1[pathway020.ann1 == 0] <- ""
+
+
+
 pathway030.ann[pathway030.ann == 0] <- ""
+pathway030.ann1[pathway030.ann1 == 0] <- ""
+
+pathway040.ann[pathway040.ann == 0] <- ""
+pathway040.ann1[pathway040.ann1 == 0] <- ""
+
+pathway010.ann.1=pathway010.ann %>% mutate_if(is.numeric, ~1 * (. != 0))
+pathway020.ann.1=pathway020.ann %>% mutate_if(is.numeric, ~1 * (. != 0))
+pathway030.ann.1=pathway030.ann %>% mutate_if(is.numeric, ~1 * (. != 0))
+pathway040.ann.1=pathway040.ann %>% mutate_if(is.numeric, ~1 * (. != 0))
 
 
-pathway010.ann1=pathway010.ann %>% mutate_if(is.numeric, ~1 * (. != 0))
-pathway020.ann1=pathway020.ann %>% mutate_if(is.numeric, ~1 * (. != 0))
-pathway030.ann1=pathway030.ann %>% mutate_if(is.numeric, ~1 * (. != 0))
+pathway010.ann1.1=pathway010.ann1 %>% mutate_if(is.numeric, ~1 * (. != 0))
+pathway020.ann1.1=pathway020.ann1 %>% mutate_if(is.numeric, ~1 * (. != 0))
+pathway030.ann1.1=pathway030.ann1 %>% mutate_if(is.numeric, ~1 * (. != 0))
+pathway040.ann1.1=pathway040.ann1 %>% mutate_if(is.numeric, ~1 * (. != 0))
 
 
-pdf("pathway.pattern.failure.agg.pdf",20,6)
-t01=oncoPrint(pathway010.ann1, remove_empty_columns = FALSE, remove_empty_rows = F,
+pdf("pathway.location.failure.agg..v2.pdf",15,5)
+t01=oncoPrint(pathway010.ann.1, remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="no.progression.at.last.fu(47)")
-t02=oncoPrint(pathway020.ann1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Pelvic Node no (137)")
+t01a=oncoPrint(pathway010.ann1.1, remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="polyprogressor(36)")
-t03=oncoPrint(pathway030.ann1, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="oligoprogressor(73)")
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Pelvic Node (40)")
 
-t01+t03+t02
+
+t02=oncoPrint(pathway020.ann.1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Distant Node no  (137)")
+t02a=oncoPrint(pathway020.ann1.1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Distant Node yes (40)")
+
+t03=oncoPrint(pathway030.ann.1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Bone no (129)")
+
+t03a=oncoPrint(pathway030.ann1.1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Bone yes (50)")
+
+
+
+t04=oncoPrint(pathway040.ann.1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
+              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Visceral no (163)")
+
+t04a=oncoPrint(pathway040.ann1.1, remove_empty_columns = FALSE, remove_empty_rows = F,
+               alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
+               show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="Location_of_failure:Visceral yes (14)")
+
+
+
+t01+t01a
+t02+t02a
+t03+t03a
+t04+t04a
 
 dev.off()
 
-
-
-
-
-
-###############################################################
-
-
-
-ranks <-merge(pw,matrix.nopro,by.x="gene",by.y=0)
-
-ranks1 <- merge(pw,matrix.oligo,by.x="gene",by.y=0)
-
-
-ranks2 <- merge(pw,matrix.poly,by.x="gene",by.y=0)
-
-
-
-
-library("dplyr")
-library("tidyr")
-rank01=ranks 
-rownames(rank01)=ranks$gene
-
-rank01[,-c(1:2)] <- as.integer(rank01[,-c(1:2)] !="")
-
-rank01[rank01 == 0]<-""
-rank01[is.na(rank01)]<-""
-
-write.table(rank01,"path_noprog.txt",sep="\t",quote=F)
-
-setwd("~/Desktop")
-
-rank01[-c(1:2)] %>% mutate_if(is.character,as.numeric)
-rank01[is.na(rank01)]<-""
-
-
-rank02=ranks1
-rownames(rank02)=ranks1$gene
-
-rank02[,-c(1:2)] <- as.integer(rank02[,-c(1:2)] !="")
-
-rank02[rank02 == 0]<-""
-
-rank02[-c(1:2)] %>% mutate_if(is.character,as.numeric)
-rank02[is.na(rank02)]<-""
-
-write.table(rank02,"path_oligo.txt",sep="\t",quote=F)
-
-
-
-rank03=ranks2
-rownames(rank03)=ranks2$gene
-
-rank03[,-c(1:2)] <- as.integer(rank03[,-c(1:2)] !="")
-
-rank03[rank03 == 0]<-""
-rank03[-c(1:2)] %>% mutate_if(is.character,as.numeric)
-rank03[is.na(rank03)]<-""
-
-write.table(rank03,"path_poly.txt",sep="\t",quote=F)
-
-
-
-
-library(dplyr)
-library(janitor)
-library(tidyr)
-library(purrr)
-
-dat %>% 
-  group_by(pw) %>%
-  group_modify(~ bind_rows(., summarize(., across(where(is.numeric), sum)))) %>%
-  ungroup %>%
-  mutate(category = coalesce(category, paste("Total", size)),
-         size = if_else(startsWith(category, "Total"), "", size)) %>%
-  data.frame
-
-
-pathway010=read.table("path_noprog.m.txt",sep="\t",header=T,row.names=2,check.names=F)
-pathway020=read.table("path_oligo.m.txt",sep="\t",header=T,row.names=2,check.names=F)
-
-pathway030=read.table("path_poly.m.txt",sep="\t",header=T,row.names=2,check.names=F)
-
-
-
-
-pathway010[is.na(pathway010)]<-""
-pathway020[is.na(pathway020)]<-""
-pathway030[is.na(pathway030)]<-""
-pathway010[pathway010==0]<-""
-pathway020[pathway020==0]<-""
-pathway030[pathway030==0]<-""
-
-
-col0 = c("1" = "red","2" = "red","3" = "red","4"="red","5"="red","6"="red")
-
-alter_fun0 = list(
-  background = function(x, y, w, h) {
-    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
-              gp = gpar(fill = "white", col = NA))
-  },
-  # big red
-  
-  # big red
-  "1" = function(x, y, w, h) {
-    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
-              gp = gpar(fill = col0["1"], col = NA))
-    
-  },
-  # big red
-  "2" = function(x, y, w, h) {
-    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
-              gp = gpar(fill = col0["2"], col = NA))
-    
-  },
-  # big red
-  "3" = function(x, y, w, h) {
-    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
-              gp = gpar(fill = col0["3"], col = NA))
-    
-  },
-  "4" = function(x, y, w, h) {
-    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
-              gp = gpar(fill = col0["4"], col = NA))
-    
-  },
-  "5" = function(x, y, w, h) {
-    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
-              gp = gpar(fill = col0["5"], col = NA))
-    
-  },
-  
-  # big red
-  "6" = function(x, y, w, h) {
-    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
-              gp = gpar(fill = col0["6"], col = NA))
-    
-  })
-pdf("path.pdf")
-path=data.frame(OncogenicPathways(maf = all.maf))
-dev.off()
-
-pathway010.ann=merge(path[,1:3],pathway010,by.x="Pathway",by.y=0)
-rownames(pathway010.ann)=pathway010.ann$Pathway
-
-#rownames(pathway010.ann)=paste(pathway010.ann$Pathway,"(",pathway010.ann$n_affected_genes,"/",pathway010.ann$N,")",sep="")
-
-pathway020.ann=merge(path[,1:3],pathway020,by.x="Pathway",by.y=0)
-rownames(pathway020.ann)=pathway020.ann$Pathway
-
-#rownames(pathway020.ann)=paste(pathway020.ann$Pathway,"(",pathway020.ann$n_affected_genes,"/",pathway020.ann$N,")",sep="")
-
-pathway030.ann=merge(path[,1:3],pathway030,by.x="Pathway",by.y=0)
-#rownames(pathway030.ann)=paste(pathway030.ann$Pathway,"(",pathway030.ann$n_affected_genes,"/",pathway030.ann$N,")",sep="")
-rownames(pathway030.ann)=pathway030.ann$Pathway
-
-pdf("pathway.new.pattern.pdf",20,6)
-t01=oncoPrint(pathway010.ann[-c(1:4)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="metachronous.noprogression(46)")
-t02=oncoPrint(pathway020.ann[-c(1:4)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="metachronous.OLIGO(73))")
-t03=oncoPrint(pathway030.ann[-c(1:4)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun0, col = col0,show_heatmap_legend =F,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="metachronous.POLY(36)))")
-
-t01+t02+t03
-dev.off()
-
-
-
-
-
-
-
-
-#########################################
-
-
-
-
-
-
-
-meta.sub=meta[which(meta$location.of.failure.1.Pelvic.Node.2.Distant.Node.3.Bone.4.visceral!="#N/A"),]
-
-
-l1=meta.sub[which(meta.sub$location.of.failure.1.Pelvic.Node.2.Distant.Node.3.Bone.4.visceral==1),]
-
-l2=meta.sub[which(meta.sub$location.of.failure.1.Pelvic.Node.2.Distant.Node.3.Bone.4.visceral==2),]
-l3=meta.sub[which(meta.sub$location.of.failure.1.Pelvic.Node.2.Distant.Node.3.Bone.4.visceral==3),]
-l4=meta.sub[which(meta.sub$location.of.failure.1.Pelvic.Node.2.Distant.Node.3.Bone.4.visceral==4),]
-
-
-matrix.l1=all.matrix[which(all.matrix$Tumor_Sample_Barcode%in%l1$id),]
-
-
-matrix.l2=all.matrix[which(all.matrix$Tumor_Sample_Barcode%in%l2$id),]
-
-matrix.l3=all.matrix[which(all.matrix$Tumor_Sample_Barcode%in%l3$id),]
-
-
-matrix.l4=all.matrix[which(all.matrix$Tumor_Sample_Barcode%in%l4$id),]
-
-
-maf.l1=read.maf(matrix.l1)
-maf.l2=read.maf(matrix.l2)
-
-maf.l3=read.maf(matrix.l3)
-maf.l4=read.maf(matrix.l4)
-
-
-compare_result=mafCompare(maf.l1,maf.l2,minMut = 3,m1Name = 'pelvic.node',m2Name = 'Distant.Node')
-
-compare_result1=mafCompare(maf.l1,maf.l3,minMut = 3,m1Name = 'pelvic.node',m2Name = 'Bone')
-
-
-compare_result2=mafCompare(maf.l1,maf.l4,minMut = 3,m1Name = 'pelvic.node',m2Name = 'visceral')
-
-
-
-
-col = c("Missense_Mutation" = "blue", "In_Frame_Ins" = "red", "Splice_Site" = "pink","In_Frame_Del"="purple","Frame_Shift_Ins"="yellow",
-        "Frame_Shift_Del"="green", "Nonsense_Mutation"="brown", "Multi_Hit"="orange")
-
-
-
-
-input_matrix=read.table("foundation_tempus_pathogen_comb.212.txt",sep="\t",header=T,row.names=1,check.names=F)
-input_matrix[is.na(input_matrix)]<-""
-
-gene=all.maf@gene.summary
-
-gene.f=gene[which(gene$total>=3),]
-
-input_matrix.f=input_matrix[which(rownames(input_matrix)%in%gene.f$Hugo_Symbol),]
-
-
-matrix.l1=input_matrix[,which(colnames(input_matrix)%in%l1$id)]
-
-matrix.l2=input_matrix[,which(colnames(input_matrix)%in%l2$id)]
-
-matrix.l3=input_matrix[,which(colnames(input_matrix)%in%l3$id)]
-
-
-matrix.l4=input_matrix[,which(colnames(input_matrix)%in%l4$id)]
-
-
-
-matrix.l1[is.na(matrix.l1)]<-""
-
-matrix.l2[is.na(matrix.l2)]<-""
-
-matrix.l3[is.na(matrix.l3)]<-""
-
-matrix.l4[is.na(matrix.l4)]<-""
-
-
-pdf("somatic_tempus.fail_location_pathogenic.pdf",20,20)
-
-
-t01=oncoPrint(matrix.l1, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="Pelvic.Node(18)")
-#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#             alter_fun = alter_fun, col = col,
-#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
-
-
-t02=oncoPrint(matrix.l2, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="Distant.Node(30)")
-#t02s=oncoPrint(matrix.crpc[which(rownames(matrix.crpc)%in%unique(c(f5$gen1,f5$gene2,f4$gen1,f4$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#              alter_fun = alter_fun, col = col,
-#             show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="crpc(94(77F+17F))")
-
-t03=oncoPrint(matrix.l3, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="Bone(44)")
-#t02s=oncoPrint(matrix.crpc[which(rownames(matrix.crpc)%in%unique(c(f5$gen1,f5$gene2,f4$gen1,f4$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#              alter_fun = alter_fun, col = col,
-#             show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="crpc(94(77F+17F))")
-
-t04=oncoPrint(matrix.l4, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="visceral(14)")
-#t02s=oncoPrint(matrix.crpc[which(rownames(matrix.crpc)%in%unique(c(f5$gen1,f5$gene2,f4$gen1,f4$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#              alter_fun = alter_fun, col = col,
-#             show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="crpc(94(77F+17F))")
-
-
-t01+t02+t03+t04
-#t01s
-#t02s
-dev.off()
-
-
-ltc=meta.sub[which(meta.sub$Deek.Paterns.of.Failure..1.LTC..2.olgio..3.poly.0.blank.==1),]
-
-oligo=meta.sub[which(meta.sub$Deek.Paterns.of.Failure..1.LTC..2.olgio..3.poly.0.blank.==2),]
-poly=meta.sub[which(meta.sub$Deek.Paterns.of.Failure..1.LTC..2.olgio..3.poly.0.blank.==3),]
-
-
-
-
-matrix.ltc=input_matrix[,which(colnames(input_matrix)%in%ltc$id)]
-
-matrix.oligo=input_matrix[,which(colnames(input_matrix)%in%oligo$id)]
-
-matrix.poly=input_matrix[,which(colnames(input_matrix)%in%poly$id)]
-
-
-
-matrix.ltc[is.na(matrix.ltc)]<-""
-
-matrix.oligo[is.na(matrix.oligo)]<-""
-
-matrix.poly[is.na(matrix.poly)]<-""
-
-
-
-pdf("somatic_Deek.Paterns.of.Failure.pdf",20,20)
-
-
-t01=oncoPrint(matrix.ltc, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="LTC(153)")
-#t01s=oncoPrint(matrix.ncrpc[which(rownames(matrix.ncrpc)%in%unique(c(f4$gen1,f4$gene2,f5$gen1,f5$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#             alter_fun = alter_fun, col = col,
-#            show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="non-crpc(184(95F+86T))")
-
-
-t02=oncoPrint(matrix.oligo, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="OLIGO(34)")
-#t02s=oncoPrint(matrix.crpc[which(rownames(matrix.crpc)%in%unique(c(f5$gen1,f5$gene2,f4$gen1,f4$gene2))),], remove_empty_columns = FALSE, remove_empty_rows = T,
-#              alter_fun = alter_fun, col = col,
-#             show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="crpc(94(77F+17F))")
-
-t03=oncoPrint(matrix.poly, remove_empty_columns = FALSE, remove_empty_rows = F,
-              alter_fun = alter_fun, col = col,
-              show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 6),column_title="ploy(33)")
-t01+t02+t03
-
-dev.off()
-
-
-
-
-
-
-
-##################################################################
-
-
-treat = meta.crpc[, "Systemic.therapy..1..MDT.2..Observation.3"]
-rPFS_time = as.numeric(meta.crpc[, "rPFS_time"])
-group = meta.crpc[, "group"]
-pfs = meta.crpc[, "pfs"]
-crpc = meta.crpc[, "crpc"]
-syn.metachro = meta.crpc[, "Time..2.synchronous..1.metachronous."]
-number.of.lesions=meta.crpc[,"Number.of.lesions"]
-
-
-set.seed(10)
-
-# setNames(RColorBrewer::brewer.pal(name = "Blues", n = 7), c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
-
-
-ha01 = HeatmapAnnotation(treat = treat, group = group,pfs=pfs,crpc=crpc,syn.metachro=syn.metachro,number.of.lesions=number.of.lesions,
-                         
-                         rPFS_time = anno_points(rPFS_time, ylim = c(0, max(rPFS_time, na.rm = TRUE)), axis = TRUE),
-                         col = list(group = c("Foundation" = "red", "Tempus" = "blue"),pfs,crpc,syn.metachro,number.of.lesions,
-                                    treat = c("1" = "yellow", "2" = "blue", "3" = "green"),
-                                    syn.metachro=c("2"="lightblue","1"="purple"),
-                                    crpc=c("0"="grey","1"="red"),
-                                    pfs=c("0"="green",'1'="red")),
-                         number.of.lesions=c("0"="grey","1"="green","2"="lightblue","3"="blue","4"="red","5"="orange"),
-                         #      "stage iia" = "#60FF60", "stage iib" = "#B0FFB0",
-                         #     "stage iiia" = "#6060FF", "stage iiib" = "#B0B0FF",
-                         #    "stage iv" = "#FFFF00")),
-                         #annotation_height = unit(c(5, 5, 15), "mm"),
-                         annotation_legend_param = list(treat = list(title = "Systemic.therapy(1).MDT(2).Observation(3)"),
-                                                        group = list(title = "Center"))
-)
-
-treat = meta.ncrpc[, "Systemic.therapy..1..MDT.2..Observation.3"]
-rPFS_time = as.numeric(meta.ncrpc[, "rPFS_time"])
-group = meta.ncrpc[, "group"]
-pfs = meta.ncrpc[, "pfs"]
-crpc = meta.ncrpc[, "crpc"]
-syn.metachro = meta.ncrpc[, "Time..2.synchronous..1.metachronous."]
-number.of.lesions=meta.ncrpc[,"Number.of.lesions"]
-set.seed(10)
-
-# setNames(RColorBrewer::brewer.pal(name = "Blues", n = 7), c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
-
-
-ha02 = HeatmapAnnotation(treat = treat, group = group,pfs=pfs,crpc=crpc,syn.metachro=syn.metachro,number.of.lesions=number.of.lesions,
-                         
-                         rPFS_time = anno_points(rPFS_time, ylim = c(0, max(rPFS_time, na.rm = TRUE)), axis = TRUE),
-                         col = list(group = c("Foundation" = "red", "Tempus" = "blue"),pfs,crpc,syn.metachro,number.of.lesions,
-                                    treat = c("1" = "yellow", "2" = "blue", "3" = "green"),
-                                    syn.metachro=c("2"="lightblue","1"="purple"),
-                                    crpc=c("0"="grey","1"="red"),
-                                    pfs=c("0"="green",'1'="red")),
-                         number.of.lesions=c("0"="grey","1"="green","2"="lightblue","3"="blue","4"="red","5"="orange"),
-                         #      "stage iia" = "#60FF60", "stage iib" = "#B0FFB0",
-                         #     "stage iiia" = "#6060FF", "stage iiib" = "#B0B0FF",
-                         #    "stage iv" = "#FFFF00")),
-                         #annotation_height = unit(c(5, 5, 15), "mm"),
-                         annotation_legend_param = list(treat = list(title = "Systemic.therapy(1).MDT(2).Observation(3)"),
-                                                        group = list(title = "Center"))
-)
