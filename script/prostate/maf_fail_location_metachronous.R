@@ -1,13 +1,16 @@
 library(maftools);library(data.table)
 setwd("combine_tempus_foundation/212")
-all.maf=readRDS("tempus_foundation_w_conflicP.rds")
-
-metachro=read.table("metachro_input_maf.txt",sep="\t",header=T)
-
-meta.maf=read.maf(metachro)
 
 
-meta=read.delim("combine_tempus_foundation/212/meta_302_corrected.ysong_use.txt",sep="\t",header=T)
+all.maf=readRDS("pattern_failure/tempus_foundation_w_conflicP.417.s289.rds")
+write.table(all.maf@data,"all_raw_maf_matrix.txt",sep='\t',quote=F)
+
+
+
+meta=read.delim("meta_417_corrected.v1.filter.txt",sep="\t",header=T)
+meta.s=meta[order(meta$Tumor_Sample_Barcode),]
+all.maf@clinical.data=setDT(meta.s)
+
 
 input_matrix=read.table("foundation_tempus_pathogen_comb.212.txt",sep="\t",header=T,row.names=1,check.names=F)
 
