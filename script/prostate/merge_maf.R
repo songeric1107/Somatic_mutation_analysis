@@ -1,6 +1,18 @@
 library(maftools)
+#setwd("/Users/ysong/Desktop/P_Tran_ref/maf/soma/")
+path=getwd()
+clinical_tmb=read.table("/Users/ysong/Desktop/P_Tran_ref/onco_508/soma/meta_no97.txt",sep="\t",header=T,check.names = F)
+file.names <- dir(path, pattern =".maf.mod.txt")
 
-setwd("/Volumes/projects-t3/PTRAN/Projects_starting_Jan2022/dnaseq/analysis/DNA/gatk/ysong_test/analysis_foundation_tempus/tempus_IGS_MAF/")
+
+maf_3=maftools:::merge_mafs(file.names,clinicalData=clinical_tmb,
+                            vc_nonSyn=c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_Start_Site","Nonsense_Mutation", "Nonstop_Mutation", "In_Frame_Del","In_Frame_Ins", "Missense_Mutation","3'Flank",
+"3'UTR", "5'Flank","5'UTR","Intron","RNA","Silent","IGR","Splice_Region"))
+saveRDS(maf_3,"~/Desktop/maf_all_.var.515.rds")
+
+
+pdf("soma3.pdf")
+setwd("projects-t3/PTRAN/Projects_starting_Jan2022/dnaseq/analysis/DNA/gatk/ysong_test/analysis_foundation_tempus/tempus_IGS_MAF/")
 path=getwd()
 file.names <- dir(path, pattern =".maf")
 
