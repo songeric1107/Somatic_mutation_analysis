@@ -75,7 +75,7 @@ saveRDS(merged_maf_TN_1000G_sub,"/local/projects-t3/PTRAN/Projects_starting_Jan2
 ### foundation
 
 
-path="/local/projects-t3/PTRAN/Projects_starting_Jan2022/dnaseq/analysis/DNA/gatk/ysong_test/analysis_foundation_tempus/maf/"
+path="/local/projects-t3/PTRAN/Projects_starting_Jan2022/dnaseq/analysis/DNA/gatk/ysong_test/analysis_foundation_tempus/foundation_maf/"
 
 list.mafs= list.files(path, pattern=".maf", full.names=T)
 list.all.maf.files <- lapply(list.mafs, function(i){
