@@ -1,1 +1,278 @@
+title: "nmf_script"
+output: html_document
+date: "2024-03-20"
+---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r prepare matrix}
+
+count=read.table("/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/tab_file/all_counts.txt",sep="\t",header=T,row.names=1)
+
+##check if there are negative values in the file.
+ sum(  count < 0  )
+ 
+ 
+ tpm <- function(counts, lengths) { 
+  rpk <- counts/(lengths/1000) 
+  coef <- sum(rpk) / 1e6 
+  rpk/coef 
+} 
+
+ann=read.table("~/Desktop/annotation/mouse_gene_length.110.txt",sep="\t",header=T)
+ann$length=ann$Gene.end..bp.-ann$Gene.start..bp.
+
+counts.xjmum=merge(ann[,c(1,4:5)],count,by.x="Gene.stable.ID",by.y=0)
+rownames(counts.xjmum)=counts.xjmum$Gene.stable.ID
+
+
+
+tpm_count <- data.frame(apply(counts.xjmum[,-c(1:3)], 2, function(x) tpm(x, counts.xjmum$length) )) 
+tpm.count.ann=merge(counts.xjmum[c(1:2)],tpm_count,by=0)
+ rownames(tpm.count.ann)=tpm.count.ann$Gene.stable.ID
+
+
+```
+
+## select highly variable genes
+
+Gene expression bimodal index ≥ 1.5, mean expression value ≥ 25th percentile, and standard deviation of expression value ≥ 50th percentile
+
+
+```{r highly variable, echo=FALSE}
+library(BimodalIndex)
+
+##bimodalIndex take some time to run
+bi <- bimodalIndex(data.frame(tpm.count.ann[-c(1:3)]), verbose=FALSE)
+bi.f=bi[which(bi$BI>1.5),]
+m1=apply(tpm.count.ann[-c(1:3)],1,function(x){mean(x)})
+m1f=m1[which(m1>quantile(m1, 0.25))]
+
+sd=apply(tpm.count.ann[-c(1:3)],1,function(x){sd(x)})
+sdf=sd[which(sd>quantile(m1, 0.5))]
+
+candidate=Reduce(intersect, list(names(b1.f),names(m1f),names(sdf)))
+candidate=Reduce(intersect, list(names(m1f),names(sdf)))
+
+
+input=tpm.count.ann[which(rownames(tpm.count.ann )%in%candidate),]
+
+
+
+```
+```{r highly variable gene by MAD}
+
+rmads <- apply(tpm.count.ann[,-c(1:3)], 1, mad)        
+
+sorted <- sort(rmads, decreasing=TRUE, index.return=TRUE)$ix[1:1000]
+rmadsf=rmads[sorted]
+
+input=tpm.count.ann[which(rownames(tpm.count.ann)%in%names(rmadsf)),]
+
+
+###optional
+base_mean = rowMeans(input[-c(1:3)])
+mat_scaled = t(scale(t(input[-c(1:3)])))
+
+pdf("~/Desktop/heatmap3.pdf")
+Heatmap(mat_scaled)
+dev.off()
+
+```
+
+```{r highly variable gene}
+
+#Apply log2 transformation
+logCounts <- log2(t(tpm_count)+1)
+
+#Compute the mean and the variance for each gene
+geneVars <- apply(logCounts, 2, var)
+geneMeans <- colMeans(logCounts)
+
+#Calculate the coefficient of variance based on previous values
+geneCV2 <- geneVars / geneMeans^2
+
+
+sorted <- sort(geneVars, decreasing=TRUE, index.return=TRUE)$ix[1:1000]
+HGVs <- logCounts[, sorted]
+input1=data.frame(t(HGVs))
+
+#####option
+base_mean = rowMeans(input1)
+mat_scaled = t(scale(t(input1)))
+
+pdf("~/Desktop/heatmap2.pdf")
+Heatmap(mat_scaled)
+dev.off()
+
+```
+
+
+DENOVO NMF
+
+```{r denovo nmf}
+library(NMF)
+nmf_marker=nmf(input[-c(1:3)],2:7,nrun=100,seed=123456)
+
+
+nmf_marker=readRDS("/Users/ysong/Desktop/human_pdac/nmf.all.marker.rds")
+pdf("~/Desktop/nmf.evaluation.pdf")
+plot(nmf_marker)
+dev.off()
+
+silhouette(nmf_marker$fit$`2`)
+
+
+###select the best k. for example 2
+
+raw.nmf2 <- nmf_marker$fit$`2`
+
+##get consensus pattern
+nmf2=data.frame(NMF::predict(raw.nmf2 , what = "consensus"))
+names(nmf2)="cluster"
+
+
+##check the silhouette value of subtyping.
+pdf('~/Desktop/metagenes.cluster.new.pdf')
+raw.nmf2 <- nmf_marker$fit$`2`
+op <- par(mfrow = c(1,1))
+xx=consensusmap(raw.nmf2)
+
+yy=coefmap(fit(raw.nmf2))
+
+
+si <- silhouette(raw.nmf2, what = 'consensus')
+plot(si)
+
+raw.nmf2 <- nmf_marker$fit$`3`
+op <- par(mfrow = c(1,1))
+xx=consensusmap(raw.nmf2)
+
+yy=coefmap(fit(raw.nmf2))
+
+
+si <- silhouette(raw.nmf2, what = 'consensus')
+plot(si)
+
+
+raw.nmf2 <- nmf_marker$fit$`4`
+op <- par(mfrow = c(1,1))
+xx=consensusmap(raw.nmf2)
+
+yy=coefmap(fit(raw.nmf2))
+
+
+si <- silhouette(raw.nmf2, what = 'consensus')
+plot(si)
+
+dev.off()
+
+
+
+```
+```{r consensusCluster}
+marker1=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/motiffit.marker.txt",sep="\t",header=F)
+
+marker2=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/collisson_marker.txt",sep="\t",header=F)
+
+marker3=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/puleo/Puleo_readable_list.tsv",sep="\t",header=T)
+
+
+
+marker4=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/michelle.txt",sep="\t",header=F)
+marker5=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/bailey/Bailey_readable_list.tsv",sep="\t",header=F)
+marker5.uniq=marker5[which(marker5$V2!="not unique"),]
+
+
+homolog=read.table("~/Desktop/annotation/mouse_human_homolog.txt",sep="\t",header=T)
+
+
+
+
+###marker2
+
+marker2.homo=merge(marker2,unique(homolog[-2]),by.x="V1",by.y="Gene.name")
+marker2.homos=marker2.homo[which(marker2.homo$Mouse.gene.name!=""),]
+
+ref.sub1=tpm.count.ann
+
+
+ref.sub1a=ref.sub1[which(rownames(ref.sub1)%in%marker2.homos$Mouse.gene.stable.ID),]
+rownames(ref.sub1a)=ref.sub1a$Gene.name
+
+#ref.sub=ref.sub[-1]
+
+
+pdf_sub1 <- as.data.frame(t(scale(t(ref.sub1a[-c(1:3)]), center = T, scale = T)))
+
+
+setwd("~/Desktop")
+pdf("consense.collison.pdf")
+library("ConsensusClusterPlus")
+#dist=as.dist(pall[[2]]$consensusTree)
+rcc = ConsensusClusterPlus(as.matrix(pdf_sub1),maxK=10,reps=500,pItem=0.8,pFeature=.8,title="motiff",distance="pearson",clusterAlg="hc")
+
+
+#[[2]]$consensusTr
+dev.off()
+
+
+
+all=data.frame(rcc[[2]]$consensusClass)
+names(all)="cluster"
+
+
+
+pdf("heatmap.collisson.pdf",15,15)
+ha1 = HeatmapAnnotation( cluster=all$cluster,
+                         col = list(cluster=c("1" = "red","2" = "orange","3" = "blue","4"="green")))
+
+marker2s=marker2.homos[which(unique(marker2.homos[,c(2,5)])$Mouse.gene.name%in%rownames(pdf_sub1)),]
+marker2s=marker2s[order(marker2s$V2),]
+HA = rowAnnotation (
+  df=marker2s$V2,
+  col=list (df=c("classical"="red","exocrine-like"="green","QM-PDA"="blue")),
+  width=unit(4,"mm")
+)
+
+tmp1=pdf_sub1[order(match(rownames(pdf_sub1),marker2s$Mouse.gene.name)),]
+
+HA+Heatmap(tmp1,cluster_columns=as.dendrogram(rcc[[3]]$consensusTree),top_annotation = ha1,row_order=marker2s$Mouse.gene.name)
+
+
+dev.off()
+
+
+```
+
+
+
+use enrichR to annotate the samples
+
+```{r projectR}
+
+
+#get the consensus from nmf of the ref
+
+
+
+w1.dup <- basis(res1)
+
+colnames(w1.dup)=c("cluster1","cluster2")
+#colnames(w1.dup)=c("QM","E")
+library(projectR)
+
+
+input1=read.table("~/Desktop/input1.txt",sep="\t",header=T,row.names=1)
+ref1=read.table("~/Desktop/ref1.txt",sep="\t",header=T,row.names=1)
+library(projectR)
+
+s12=projectR(as.matrix(input1), as.matrix(ref1),full=T)
