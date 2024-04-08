@@ -1,1 +1,508 @@
+library(maftools);library(data.table)
 
+
+all.maf=readRDS("/Users/ysong/Desktop/P_Tran_ref/pattern_failure/tempus_foundation_w_conflicP.417.s289.rds")
+##############clinical trail
+
+#Missense_Mutation,In_Frame_Ins,Splice_Site,In_Frame_Del
+
+col = c("Missense_Mutation" = "blue", "In_Frame_Ins" = "red", "Splice_Site" = "#008000","In_Frame_Del"="purple","Frame_Shift_Ins"="yellow",
+        "Frame_Shift_Del"="grey", "Nonsense_Mutation"="brown", "Multi_Hit"="orange")
+
+
+#prepare the topbar
+
+alter_fun = list(
+  background = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = "#CCCCCC", col = NA))
+  },
+  # big blue
+  Missense_Mutation = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Missense_Mutation"], col = NA))
+  },
+  # big red
+  In_Frame_Ins = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["In_Frame_Ins"], col = NA))
+  },
+  # small green
+  Splice_Site = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"),  
+              gp = gpar(fill = col["Splice_Site"], col = NA))},
+  
+  # small green
+  In_Frame_Del = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["In_Frame_Del"], col = NA))
+  },
+  
+  Frame_Shift_Ins= function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Frame_Shift_Ins"], col = NA))},
+  
+  Frame_Shift_Del= function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Frame_Shift_Del"], col = NA))},
+  Nonsense_Mutation= function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Nonsense_Mutation"], col = NA))},
+  Multi_Hit= function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col["Multi_Hit"], col = NA))}
+)
+
+
+meta=read.delim("//Users/ysong/Desktop/P_Tran_ref/score/to_use/Complete Artera Database_v3_f.txt",sep="\t",header=T)
+
+meta.trail=read.delim("//Users/ysong/Desktop/P_Tran_ref/score/to_use/Complete Artera Database_v3_f.txt",sep="\t",header=T)      
+#meta.trail.f=meta.trail[which(meta.trail$clinical_trail=="Y"),]
+
+meta.trail.f=meta.trail[which(meta.trail$Time..2.synchronous..1.metachronous.==1),]
+
+meta.trail.f=meta.trail.f[order(meta.trail.f$ARTERA.Score),]
+
+
+mutation=read.table("/Users/ysong/Desktop/P_Tran_ref/score/to_use/score_Phil_update_v2/onco_matrix.txt",sep="\t",check.names=F,header=T,row.names=1)    
+
+
+  mutation.sub=mutation[which(colnames(mutation)%in%meta.trail.f$Tumor_Sample_Barcode)]
+
+
+mutation.s=mutation.sub[,order(match(colnames(mutation.sub),meta.trail.f$Tumor_Sample_Barcode))]        
+
+ha = HeatmapAnnotation(therapy = meta.trail.f$MDT.1.yes..0.no., score = anno_points(meta.trail.f$ARTERA.Score, ylim = c(0, 1), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+pdf("mutation_trail.score.pdf",10,20)
+oncoPrint(mutation.s,col=col, alter_fun = alter_fun, column_order=colnames(mutation.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "",
+             bottom_annotation = ha)     
+
+dev.off()
+
+
+meta.sub1=meta.trail.f[which(meta.trail.f$MDT.1.yes..0.no.==1),]
+meta.sub2=meta.trail.f[which(meta.trail.f$MDT.1.yes..0.no.==0),]
+
+
+
+meta.sub1.s=meta.sub1[order(meta.sub1$ARTERA.Score),]
+
+meta.sub2.s=meta.sub2[order(meta.sub2$ARTERA.Score),]
+
+
+mutation=read.table("/Users/ysong/Desktop/P_Tran_ref/score/to_use/score_Phil_update_v2/onco_matrix.txt",sep="\t",check.names=F,header=T,row.names=1)    
+
+
+mutation.sub=mutation[which(colnames(mutation)%in%meta.trail.f$Tumor_Sample_Barcode)]
+
+
+mutation.s=mutation.sub[,order(match(colnames(mutation.sub),meta.trai.f$Tumor_Sample_Barcode))]        
+
+mutation.s[is.na(mutation.s)]<-""
+sub1=mutation.s[which(colnames(mutation.s)%in%meta.sub1.s$Tumor_Sample_Barcode)]
+sub2=mutation.s[which(colnames(mutation.s)%in%meta.sub2.s$Tumor_Sample_Barcode)]
+
+
+sub1.s=sub1[order(match(colnames(sub1),meta.sub1.s$Tumor_Sample_Barcode))]
+
+sub2.s=sub2[order(match(colnames(sub2),meta.sub2.s$Tumor_Sample_Barcode))]
+
+
+ha.s1 = HeatmapAnnotation(therapy = meta.sub1.s$MDT.1.yes..0.no., score = anno_points(meta.sub1.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+
+
+ha.s2 = HeatmapAnnotation(therapy = meta.sub2.s$MDT.1.yes..0.no., score = anno_points(meta.sub2.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+
+
+
+pdf("mutation.clinical.mdt.pdf",30,20)
+
+p1=oncoPrint(sub1.s,col=col, alter_fun = alter_fun, column_order=colnames(sub1.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "MDT=1",
+             bottom_annotation = ha.s1)     
+
+p2=oncoPrint(sub2.s,col=col, alter_fun = alter_fun, column_order=colnames(sub2.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "MDT=0",
+             bottom_annotation = ha.s2)   
+
+p1+p2
+
+dev.off()
+
+
+meta.therapy.sub1=meta.trail.f
+
+
+
+meta.therapy.sub1$bin <- rep(NA, nrow(meta.therapy.sub1))
+
+meta.therapy.sub1[meta.therapy.sub1$ARTERA.Score<0.5124, ][, "bin"] <- "bin1"
+
+meta.therapy.sub1[meta.therapy.sub1$ARTERA.Score>=0.5124, ][, "bin"] <- "bin2"
+
+
+
+
+meta.sub1=meta.therapy.sub1[which(meta.therapy.sub1$bin=="bin1"&meta.therapy.sub1$MDT.1.yes..0.no.==1),]
+meta.sub2=meta.therapy.sub1[which(meta.therapy.sub1$bin=="bin1"&meta.therapy.sub1$MDT.1.yes..0.no.==0),]
+meta.sub3=meta.therapy.sub1[which(meta.therapy.sub1$bin=="bin2"&meta.therapy.sub1$MDT.1.yes..0.no.==1),]
+meta.sub4=meta.therapy.sub1[which(meta.therapy.sub1$bin=="bin2"&meta.therapy.sub1$MDT.1.yes..0.no.==0),]
+
+
+meta.sub1.s=meta.sub1[order(meta.sub1$ARTERA.Score),]
+
+meta.sub2.s=meta.sub2[order(meta.sub2$ARTERA.Score),]
+meta.sub3.s=meta.sub3[order(meta.sub3$ARTERA.Score),]
+meta.sub4.s=meta.sub4[order(meta.sub4$ARTERA.Score),]
+
+
+#mutation=read.table("/Users/ysong/Desktop/P_Tran_ref/score/to_use/score_Phil_update/onco_matrix.txt",sep="\t",check.names=F,header=T,row.names=1)    
+
+mutation.sub=mutation[which(colnames(mutation)%in%meta.trail.f$Tumor_Sample_Barcode)]
+
+
+mutation.s=mutation.sub[,order(match(colnames(mutation.sub),meta.trail.f$Tumor_Sample_Barcode))]        
+
+mutation.s[is.na(mutation.s)]<-""
+sub1=mutation.s[which(colnames(mutation.s)%in%meta.sub1.s$Tumor_Sample_Barcode)]
+sub2=mutation.s[which(colnames(mutation.s)%in%meta.sub2.s$Tumor_Sample_Barcode)]
+sub3=mutation.s[which(colnames(mutation.s)%in%meta.sub3.s$Tumor_Sample_Barcode)]
+sub4=mutation.s[which(colnames(mutation.s)%in%meta.sub4.s$Tumor_Sample_Barcode)]
+
+sub1.s=sub1[order(match(colnames(sub1),meta.sub1.s$Tumor_Sample_Barcode))]
+
+sub2.s=sub2[order(match(colnames(sub2),meta.sub2.s$Tumor_Sample_Barcode))]
+sub3.s=sub3[order(match(colnames(sub3),meta.sub3.s$Tumor_Sample_Barcode))]
+sub4.s=sub4[order(match(colnames(sub4),meta.sub4.s$Tumor_Sample_Barcode))]
+
+ha.s1 = HeatmapAnnotation(therapy = meta.sub1.s$MDT.1.yes..0.no., score = anno_points(meta.sub1.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+
+
+ha.s2 = HeatmapAnnotation(therapy = meta.sub2.s$MDT.1.yes..0.no., score = anno_points(meta.sub2.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+
+ha.s3 = HeatmapAnnotation(therapy = meta.sub3.s$MDT.1.yes..0.no., score = anno_points(meta.sub3.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+ha.s4 = HeatmapAnnotation(therapy = meta.sub4.s$MDT.1.yes..0.no., score = anno_points(meta.sub4.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+pdf("mutation.clinical.pdf",30,20)
+
+p1=oncoPrint(sub1.s,col=col, alter_fun = alter_fun, column_order=colnames(sub1.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "score<median & MDT=1",
+             bottom_annotation = ha.s1)     
+
+p2=oncoPrint(sub2.s,col=col, alter_fun = alter_fun, column_order=colnames(sub2.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "score<median & MDT=0",
+             bottom_annotation = ha.s2)   
+
+p3=oncoPrint(sub3.s,col=col, alter_fun = alter_fun, column_order=colnames(sub3.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "score>=median & MDT=1",
+             bottom_annotation = ha.s3)   
+p4=oncoPrint(sub4.s,col=col, alter_fun = alter_fun, column_order=colnames(sub4.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "score>=median & MDT=0",
+             bottom_annotation = ha.s4)   
+p1+p2+p3+p4
+
+dev.off()
+
+
+
+gene = c('ATM','TP53','SPOP',"APC",'CTNNB1',"PIK3CA","RB1")
+pdf("mutation.trail.sub.pdf",30,10)
+
+p1=oncoPrint(sub1.s[which(rownames(sub1.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub1.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "1st bin",
+             bottom_annotation = ha.s1)     
+
+p2=oncoPrint(sub2.s[which(rownames(sub2.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub2.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "2nd bin",
+             bottom_annotation = ha.s2)   
+
+p3=oncoPrint(sub3.s[which(rownames(sub3.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub3.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "3rd bin",
+             bottom_annotation = ha.s3)   
+p4=oncoPrint(sub4.s[which(rownames(sub4.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub4.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "4th bin",
+             bottom_annotation = ha.s4)   
+p1+p2+p3
+
+dev.off()
+
+
+
+
+input_matrix.path=merge(pw,mutation.s,by.x="gene",by.y=0)
+
+input_matrix.path[input_matrix.path== ''] <- NA
+input_matrix.path1=input_matrix.path
+input_matrix.path1[is.na(input_matrix.path1)] <- ""
+
+rownames(input_matrix.path1)=input_matrix.path1$gene
+
+
+
+
+path.agg.s1=input_matrix.path1[,which(colnames(input_matrix.path1)%in%meta.sub1.s$Tumor_Sample_Barcode)]
+path.agg.s2=input_matrix.path1[,which(colnames(input_matrix.path1)%in%meta.sub2.s$Tumor_Sample_Barcode)]
+path.agg.s3=input_matrix.path1[,which(colnames(input_matrix.path1)%in%meta.sub3.s$Tumor_Sample_Barcode)]
+path.agg.s4=input_matrix.path1[,which(colnames(input_matrix.path1)%in%meta.sub4.s$Tumor_Sample_Barcode)]
+
+path.agg.s1=path.agg.s1[order(match(colnames(path.agg.s1),meta.sub1.s$Tumor_Sample_Barcode))]
+path.agg.s2=path.agg.s2[order(match(colnames(path.agg.s2),meta.sub2.s$Tumor_Sample_Barcode))]
+path.agg.s3=path.agg.s3[order(match(colnames(path.agg.s3),meta.sub3.s$Tumor_Sample_Barcode))]
+path.agg.s4=path.agg.s4[order(match(colnames(path.agg.s4),meta.sub4.s$Tumor_Sample_Barcode))]
+
+
+
+path.agg.s1$pw=input_matrix.path1$pw
+path.agg.s2$pw=input_matrix.path1$pw
+
+
+path.agg.s3$pw=input_matrix.path1$pw
+path.agg.s4$pw=input_matrix.path1$pw
+
+
+ha.s1 = HeatmapAnnotation(therapy = meta.sub1.s$MDT.1.yes..0.no., score = anno_points(meta.sub1.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+
+
+ha.s2 = HeatmapAnnotation(therapy = meta.sub2.s$MDT.1.yes..0.no., score = anno_points(meta.sub2.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+
+ha.s3 = HeatmapAnnotation(therapy = meta.sub3.s$MDT.1.yes..0.no., score = anno_points(meta.sub3.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+ha.s4 = HeatmapAnnotation(therapy = meta.sub4.s$MDT.1.yes..0.no., score = anno_points(meta.sub4.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+
+
+
+
+pdf("mutation.trail.MDT.PATH.pdf",30,10)
+
+t02=oncoPrint(path.agg.s1[-ncol(path.agg.s1)], remove_empty_columns = FALSE, remove_empty_rows = F,
+              column_order=colnames(path.agg.s1[-ncol(path.agg.s1)]),bottom_annotation = ha.s1,
+              alter_fun = alter_fun, col = col,row_split=path.agg.s1$pw,
+              #row_title_rot = switch(row_title_side[1], "left" = 0),
+              
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="score<median & MDT=1")
+
+
+
+t03=oncoPrint(path.agg.s2[-ncol(path.agg.s2)], remove_empty_columns = FALSE, remove_empty_rows = F,
+              column_order=colnames(path.agg.s2[-ncol(path.agg.s2)]),bottom_annotation = ha.s2,
+              alter_fun = alter_fun, col = col,row_split=path.agg.s2$pw,
+              #row_title_rot = switch(row_title_side[1], "left" = 0),
+              
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="score<median & MDT=0")
+
+t04=oncoPrint(path.agg.s3[-ncol(path.agg.s3)], remove_empty_columns = FALSE, remove_empty_rows = F,
+              column_order=colnames(path.agg.s3[-ncol(path.agg.s3)]),bottom_annotation = ha.s3,
+              alter_fun = alter_fun, col = col,row_split=path.agg.s3$pw,
+              #row_title_rot = switch(row_title_side[1], "left" = 0),
+              
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="score>=median&MDT=1")
+
+
+
+t05=oncoPrint(path.agg.s4[-ncol(path.agg.s4)], remove_empty_columns = FALSE, remove_empty_rows = F,
+              column_order=colnames(path.agg.s4[-ncol(path.agg.s4)]),bottom_annotation = ha.s4,
+              alter_fun = alter_fun, col = col,row_split=path.agg.s4$pw,
+              #row_title_rot = switch(row_title_side[1], "left" = 0),
+              
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="score>=median&MDT=0")
+
+
+draw(t02+t03+t04+t05,heatmap_legend_side="bottom", annotation_legend_side="bottom")
+
+
+
+
+dev.off()
+
+
+path.gene=cbind(path.agg.s1,path.agg.s2,path.agg.s3,path.agg.s4)
+
+df1=path.gene[,-c(13,20,34,40)]
+df1.m=melt(as.matrix(df1))
+df1.m$value=gsub("Missense_Mutation",1,df1.m$value )
+df1.m$value=gsub("Nonsense_Mutation",1,df1.m$value )
+df1.m$value=gsub("Splice_Site",1,df1.m$value )
+df1.m$value=gsub("Multi_Hit",1,df1.m$value )
+df1.m$value=gsub("Frame_Shift_Del",1,df1.m$value )
+df1.m$value=gsub("Frame_Shift_Ins",1,df1.m$value )
+
+
+df3a=dcast(df1.m,Var1~Var2,drop=F,fill=0,value.var="value")
+df3a$pw=path.gene$pw
+
+
+df3a[2:37] <- lapply(df3a[2:37], function(x) as.numeric(as.character(x)))
+df3a[is.na(df3a)]<-0
+
+
+
+path.agg=aggregate(df3a[,-c(1,38)], by=list(pathway=df3a$pw), FUN=sum)
+rownames(path.agg)=path.agg$pathway
+path.agg.s=path.agg[order(match(colnames(path.agg),meta.therapy.sub1$Tumor_Sample_Barcode))]
+
+tmp=path.agg.s[1:36]
+tmp1=tmp %>% mutate_if(is.numeric, ~1 * (. != 0))
+
+#path.agg.s[,1:148]=path.agg.s[,1:148] %% mutate_if(is.numeric, ~1 * (. != 0))
+path.agg=tmp1
+path.agg[path.agg == 0] <- ""
+
+
+
+
+
+
+
+##split by therapy
+
+bin1=meta.sub1.s
+bin2=meta.sub2.s
+bin3=meta.sub3.s
+bin4=meta.sub4.s
+
+
+
+path.agg.s1=path.agg[,which(colnames(path.agg)%in%bin1$Tumor_Sample_Barcode)]
+path.agg.s2=path.agg[,which(colnames(path.agg)%in%bin2$Tumor_Sample_Barcode)]
+path.agg.s3=path.agg[,which(colnames(path.agg)%in%bin3$Tumor_Sample_Barcode)]
+path.agg.s4=path.agg[,which(colnames(path.agg)%in%bin4$Tumor_Sample_Barcode)]
+
+path.agg.s1=path.agg.s1[order(match(colnames(path.agg.s1),bin1$Tumor_Sample_Barcode))]
+path.agg.s2=path.agg.s2[order(match(colnames(path.agg.s2),bin2$Tumor_Sample_Barcode))]
+path.agg.s3=path.agg.s3[order(match(colnames(path.agg.s3),bin3$Tumor_Sample_Barcode))]
+path.agg.s4=path.agg.s4[order(match(colnames(path.agg.s4),bin4$Tumor_Sample_Barcode))]
+
+ha1 = HeatmapAnnotation(pfs = bin1$pfs, crpc = bin1$crpc,os=bin1$status,therapy=bin1$MDT.1.yes..0.no.,
+                        score = anno_points(bin1$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                        col = list(
+                          pfs = c("1" = "red", "0" = "blue"),
+                          crpc = c("1"="red","0"="blue","ex"="grey"),
+                          os = c("1"="red","0"="blue","na"="grey"),
+                          therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                        #annotation_height = unit(c(5, 5, 15), "mm"),
+                        annotation_legend_param = list(pfs = list(title = "PFS"),
+                                                       os = list(title = "OS"),
+                                                       crpc=list(title="crpc"),
+                                                       therapy=list(title="therapy")))
+
+
+ha2 = HeatmapAnnotation(pfs = bin2$pfs, crpc = bin2$crpc,os=bin2$status,therapy=bin2$MDT.1.yes..0.no.,
+                        score = anno_points(bin2$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                        col = list(
+                          pfs = c("1" = "red", "0" = "blue"),
+                          crpc = c("1"="red","0"="blue","ex"="grey"),
+                          os = c("1"="red","0"="blue","na"="grey"),group = c("Tempus"="orange","Foundation"="cyan"),
+                          therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                        #annotation_height = unit(c(5, 5, 15), "mm"),
+                        annotation_legend_param = list(pfs = list(title = "PFS"),
+                                                       os = list(title = "OS"),
+                                                       crpc=list(title="crpc"),
+                                                       therapy=list(title="therapy")))
+
+ha3 = HeatmapAnnotation(pfs = bin3$pfs, crpc = bin3$crpc,os=bin3$status,therapy=bin3$MDT.1.yes..0.no.,
+                        score = anno_points(bin3$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                        col = list(
+                          pfs = c("1" = "red", "0" = "blue"),
+                          crpc = c("1"="red","0"="blue","ex"="grey"),
+                          os = c("1"="red","0"="blue","na"="grey"),
+                          therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                        #annotation_height = unit(c(5, 5, 15), "mm"),
+                        annotation_legend_param = list(pfs = list(title = "PFS"),
+                                                       os = list(title = "OS"),
+                                                       crpc=list(title="crpc"),
+                                                       therapy=list(title="therapy")))
+
+ha4 = HeatmapAnnotation(pfs = bin4$pfs, crpc = bin4$crpc,os=bin4$status,therapy=bin4$MDT.1.yes..0.no.,
+                        score = anno_points(bin4$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                        col = list(
+                          pfs = c("1" = "red", "0" = "blue"),
+                          crpc = c("1"="red","0"="blue","ex"="grey"),
+                          os = c("1"="red","0"="blue","na"="grey"),
+                          therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                        #annotation_height = unit(c(5, 5, 15), "mm"),
+                        annotation_legend_param = list(pfs = list(title = "PFS"),
+                                                       os = list(title = "OS"),
+                                                       crpc=list(title="crpc"),
+                                                       therapy=list(title="therapy")))
+
+pdf("~/Desktop/path.agg.score.top.bot.mdt.path.pdf",15,5)
+
+
+
+t02=oncoPrint(path.agg.s1, remove_empty_columns = FALSE, remove_empty_rows = F,
+              column_order=colnames(path.agg.s1),bottom_annotation = ha1,
+              alter_fun = alter_fun0, col = col,
+              #row_title_rot = switch(row_title_side[1], "left" = 0),
+              
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),
+              column_title="score<median&MDT=1(12)")
+
+
+
+t03=oncoPrint(path.agg.s2, remove_empty_columns = FALSE, remove_empty_rows = F,
+              column_order=colnames(path.agg.s2),bottom_annotation = ha2,
+              alter_fun = alter_fun0, col = col,
+              #row_title_rot = switch(row_title_side[1], "left" = 0),
+              
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),
+              column_title="score<median&MDT=0(6)")
+t04=oncoPrint(path.agg.s3, remove_empty_columns = FALSE, remove_empty_rows = F,
+              column_order=colnames(path.agg.s3),bottom_annotation = ha3,
+              alter_fun = alter_fun0, col = col,
+              #row_title_rot = switch(row_title_side[1], "left" = 0),
+              
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),
+              column_title="score>median&MDT=1(13)")
+t05=oncoPrint(path.agg.s4, remove_empty_columns = FALSE, remove_empty_rows = F,
+              column_order=colnames(path.agg.s4),bottom_annotation = ha4,
+              alter_fun = alter_fun0, col = col,
+              #row_title_rot = switch(row_title_side[1], "left" = 0),
+              
+              row_title_gp = gpar(fontsize = 5) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),
+              column_title="score>median&MDT=0(5)")
+
+draw(t02+t03+t04+t05,heatmap_legend_side="bottom", annotation_legend_side="bottom")
+dev.off()
