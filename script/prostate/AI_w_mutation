@@ -85,9 +85,167 @@ oncoPrint(mutation.s,col=col, alter_fun = alter_fun, column_order=colnames(mutat
 dev.off()
 
 
-meta.sub1=meta.trail.f[which(meta.trail.f$MDT.1.yes..0.no.==1),]
-meta.sub2=meta.trail.f[which(meta.trail.f$MDT.1.yes..0.no.==0),]
+###########################split by median#########################################################################################################
+#meta=read.delim("//Users/ysong/Desktop/P_Tran_ref/score/to_use/Complete Artera Database_v3_f.txt",sep="\t",header=T)
 
+
+meta=read.delim("//Users/ysong/Desktop/P_Tran_ref/score/to_use/Complete Artera Database_v3_f.txt",sep="\t",header=T)
+
+pdf("~/Desktop/boxplot_score.pdf")
+meta$Time..2.synchronous..1.metachronous.=as.factor(meta$Time..2.synchronous..1.metachronous.)
+ggplot(meta,aes(x=Time..2.synchronous..1.metachronous.,y=ARTERA.Score))+geom_violin()+geom_point(position = position_jitter(seed = 1, width = 0.2))
+#ggplot(meta,aes(x=variable,y=score,color=bin2))+geom_boxplot()+geom_point(position = position_jitter(seed = 1, width = 0.2)) 
+
+dev.off()
+#plot_data.m=melt(plot_data)
+
+
+mutation=read.table("/Users/ysong/Desktop/P_Tran_ref/score/to_use/score_Phil_update_v2/onco_matrix.txt",sep="\t",check.names=F,header=T,row.names=1)    
+meta.therapy=meta[order(meta$ARTERA.Score),]       
+
+
+
+mutation=read.table("/Users/ysong/Desktop/P_Tran_ref/score/to_use/score_Phil_update_v2/onco_matrix.txt",sep="\t",check.names=F,header=T,row.names=1)    
+
+mutation.sub=mutation[which(colnames(mutation)%in%meta.therapy$Tumor_Sample_Barcode)]
+
+
+
+mutation.s=mutation.sub[,order(match(colnames(mutation.sub),meta.therapy$Tumor_Sample_Barcode))]        
+
+mutation.s[is.na(mutation.s)]<-""
+
+
+
+meta.therapy.sub1=meta.therapy[which(meta.therapy$Time..2.synchronous..1.metachronous.==1),]
+meta.therapy.sub2=meta.therapy[which(meta.therapy$Time..2.synchronous..1.metachronous.==2),]    
+meta.therapy.sub1=meta.therapy.sub1[order(meta.therapy.sub1$ARTERA.Score),]
+meta.therapy.sub2=meta.therapy.sub2[order(meta.therapy.sub2$ARTERA.Score),]
+
+mutation.sub1a=mutation.s[which(colnames(mutation.s)%in%meta.therapy.sub1$Tumor_Sample_Barcode)]
+mutation.sub1b=mutation.s[which(colnames(mutation.s)%in%meta.therapy.sub2$Tumor_Sample_Barcode)]
+
+mutation.sub1a=mutation.sub1a[,order(match(colnames(mutation.sub1a),meta.therapy.sub1$Tumor_Sample_Barcode))]
+mutation.sub1b=mutation.sub1b[,order(match(colnames(mutation.sub1b),meta.therapy.sub2$Tumor_Sample_Barcode))]
+
+
+ha.s1 = HeatmapAnnotation(therapy = meta.therapy.sub1$MDT.1.yes..0.no., score = anno_points(meta.therapy.sub1$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+
+
+ha.s2 = HeatmapAnnotation(therapy = meta.therapy.sub2$MDT.1.yes..0.no., score = anno_points(meta.therapy.sub2$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
+                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                          #annotation_height = unit(c(5, 5, 15), "mm"),
+                          annotation_legend_param = list(therapy = list(title = "therapy")))
+
+
+
+
+gene = c('ATM','TP53','SPOP',"APC",'CTNNB1',"PIK3CA","RB1","BRCA1","BRCA2","RAD51","CHECK2","PTEN")
+pdf("mutation.specific.met.syn.pdf",20,5)
+
+p1=oncoPrint(mutation.sub1a[which(rownames(mutation.sub1a)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(mutation.sub1a),row_order=rownames(mutation.sub1a[which(rownames(mutation.sub1a)%in%gene),]),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "metachronous",
+             bottom_annotation = ha.s1)     
+
+p2=oncoPrint(mutation.sub1b[which(rownames(mutation.sub1b)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(mutation.sub1b),row_order=rownames(mutation.sub1a[which(rownames(mutation.sub1b)%in%gene),]),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "synchronous",
+             bottom_annotation = ha.s2)   
+
+
+p1+p2
+
+                 dev.off()
+
+
+mutation.sub1=mutation.s[which(colnames(mutation.s)%in%meta.therapy.sub1$Tumor_Sample_Barcode)]
+mutation.sub2=mutation.s[which(colnames(mutation.s)%in%meta.therapy.sub2$Tumor_Sample_Barcode)]
+
+
+
+
+meta.therapy.sub1=meta.therapy
+
+meta.therapy.sub1$bin <- rep(NA, nrow(meta.therapy.sub1))
+
+meta.therapy.sub1[meta.therapy.sub1$ARTERA.Score<median(meta.therapy.sub1$ARTERA.Score), ][, "bin"] <- "less than median"
+
+meta.therapy.sub1[meta.therapy.sub1$ARTERA.Score>=median(meta.therapy.sub1$ARTERA.Score), ][, "bin"] <- "more than median"
+
+
+
+library(survminer)
+library(survival)
+sfita <- survfit(as.formula(paste0("Surv(rPFS_time,pfs) ~", "bin")),  data = meta.therapy.sub1)
+
+sfitb <- survfit(as.formula(paste0("Surv(met_survival,status) ~", "bin")),  data = meta.therapy.sub1)
+
+
+library(survminer)
+library(survival)
+pdf("~/Desktop/surv.bin.median.pdf",10,8)
+
+p1=   ggsurvplot(sfita, conf.int=F, pval=TRUE, risk.table=TRUE, 
+                 #legend.labs=c(paste("score","> median",sep="_"), paste("score "," < median",sep="_")), legend.title="bin",  
+                 #palette=c("blue","red"), 
+                 title = "Status", subtitle = "Based on rPFS_time..pfs.date, pfs",
+                 
+                 font.title = c(10, "bold", "darkblue"),
+                 font.subtitle = c(10, "bold.italic", "purple"),
+                 font.caption = c(10, "plain", "orange"), 
+                 risk.table.height=0.2,ggtheme = theme_minimal())
+
+
+print(p1)
+p2=   ggsurvplot(sfitb, conf.int=F, pval=TRUE, risk.table=TRUE, 
+                 # legend.labs=c(paste("score","> median",sep="_"), paste("score "," < median",sep="_")), legend.title="bin",  
+                 #palette=c("blue","red"), 
+                 title = "Status", subtitle = "Based on met survival of status ",
+                 
+                 font.title = c(10, "bold", "darkblue"),
+                 font.subtitle = c(10, "bold.italic", "purple"),
+                 font.caption = c(10, "plain", "orange"), 
+                 risk.table.height=0.2,ggtheme = theme_minimal())
+
+
+print(p2)
+
+dev.off()
+
+meta.therapy.sub1=meta.therapy
+
+meta.sub1a=meta.therapy.sub1[which(meta.therapy.sub1$ARTERA.Score<median(meta.therapy.sub1$ARTERA.Score)),]
+meta.sub1b=meta.therapy.sub1[which(meta.therapy.sub1$ARTERA.Score>=median(meta.therapy.sub1$ARTERA.Score)),]
+
+mutation.sub1=mutation.s[which(colnames(mutation.s)%in%meta.therapy.sub1$Tumor_Sample_Barcode)]
+
+mutation.sub1a=mutation.sub1[which(colnames(mutation.sub1)%in%meta.sub1a$Tumor_Sample_Barcode)]
+mutation.sub1b=mutation.sub1[which(colnames(mutation.sub1)%in%meta.sub1b$Tumor_Sample_Barcode)]
+
+mutation.sub1a=mutation.sub1a[,order(match(colnames(mutation.sub1a),meta.sub1a$Tumor_Sample_Barcode))]
+mutation.sub1b=mutation.sub1b[,order(match(colnames(mutation.sub1b),meta.sub1b$Tumor_Sample_Barcode))]
+
+
+#mutation.sub1.ann=merge(meta.therapy,t(mutation.sub1),by.x="Tumor_Sample_Barcode",by.y=0)
+
+#mutation.sub1.ann.sub1=mutation.sub1.ann[-c(17:37)]
+
+#write.table(mutation.sub1.ann.sub1,"~/Desktop/mutation_profile_w_score_phil_1210.txt",sep="\t",quote=F)
+
+
+meta.sub1a$MDT.1.yes..0.no.=as.character(meta.sub1a$MDT.1.yes..0.no.)
+meta.sub1a$ADT..1.yes..0.no.=as.character(meta.sub1a$ADT..1.yes..0.no.)
+meta.sub1a$Oriole=as.character(meta.sub1a$Oriole)
+meta.sub1a$CHAARTED..Low.volume.1..high.volume.2.=as.character(meta.sub1a$CHAARTED..Low.volume.1..high.volume.2.)
+
+
+
+
+meta.sub1=meta.sub1a
+meta.sub2=meta.sub1b
 
 
 meta.sub1.s=meta.sub1[order(meta.sub1$ARTERA.Score),]
@@ -95,28 +253,22 @@ meta.sub1.s=meta.sub1[order(meta.sub1$ARTERA.Score),]
 meta.sub2.s=meta.sub2[order(meta.sub2$ARTERA.Score),]
 
 
-mutation=read.table("/Users/ysong/Desktop/P_Tran_ref/score/to_use/score_Phil_update_v2/onco_matrix.txt",sep="\t",check.names=F,header=T,row.names=1)    
-
-
-mutation.sub=mutation[which(colnames(mutation)%in%meta.trail.f$Tumor_Sample_Barcode)]
-
-
-mutation.s=mutation.sub[,order(match(colnames(mutation.sub),meta.trai.f$Tumor_Sample_Barcode))]        
-
+setwd("~/Desktop")
 mutation.s[is.na(mutation.s)]<-""
-sub1=mutation.s[which(colnames(mutation.s)%in%meta.sub1.s$Tumor_Sample_Barcode)]
-sub2=mutation.s[which(colnames(mutation.s)%in%meta.sub2.s$Tumor_Sample_Barcode)]
+
+sub1=mutation.sub1[which(colnames(mutation.sub1)%in%meta.sub1.s$Tumor_Sample_Barcode)]
+sub2=mutation.sub1[which(colnames(mutation.sub1)%in%meta.sub2.s$Tumor_Sample_Barcode)]
 
 
 sub1.s=sub1[order(match(colnames(sub1),meta.sub1.s$Tumor_Sample_Barcode))]
-
+    
 sub2.s=sub2[order(match(colnames(sub2),meta.sub2.s$Tumor_Sample_Barcode))]
 
 
 ha.s1 = HeatmapAnnotation(therapy = meta.sub1.s$MDT.1.yes..0.no., score = anno_points(meta.sub1.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                          #annotation_height = unit(c(5, 5, 15), "mm"),
-                          annotation_legend_param = list(therapy = list(title = "therapy")))
+                               col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                               #annotation_height = unit(c(5, 5, 15), "mm"),
+                               annotation_legend_param = list(therapy = list(title = "therapy")))
 
 
 
@@ -128,136 +280,196 @@ ha.s2 = HeatmapAnnotation(therapy = meta.sub2.s$MDT.1.yes..0.no., score = anno_p
 
 
 
-pdf("mutation.clinical.mdt.pdf",30,20)
+gene = c('ATM','TP53','SPOP',"APC",'CTNNB1',"PIK3CA","RB1","BRCA1","BRCA2","RAD51","CHECK2","PTEN")
+pdf("~/Desktop/mutation.specific.pdf",20,5)
 
-p1=oncoPrint(sub1.s,col=col, alter_fun = alter_fun, column_order=colnames(sub1.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "MDT=1",
+p1=oncoPrint(sub1.s[which(rownames(sub1.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub1.s),row_order=rownames(sub1.s[which(rownames(sub1.s)%in%gene),]),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "less than median",
+          bottom_annotation = ha.s1)     
+
+p2=oncoPrint(sub2.s[which(rownames(sub2.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub2.s),row_order=rownames(sub1.s[which(rownames(sub1.s)%in%gene),]),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "more than median",
+             bottom_annotation = ha.s2)   
+
+ 
+p1+p2
+
+
+gene1 = c('TGFBR1', 'TGFBR2', 'ACVR2A', 'ACVR1B', 'SMAD2', 'SMAD3', 'SMAD4')
+
+p1=oncoPrint(sub1.s[which(rownames(sub1.s)%in%gene1),],col=col, alter_fun = alter_fun, column_order=colnames(sub1.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "less than median",
              bottom_annotation = ha.s1)     
 
-p2=oncoPrint(sub2.s,col=col, alter_fun = alter_fun, column_order=colnames(sub2.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "MDT=0",
+p2=oncoPrint(sub2.s[which(rownames(sub2.s)%in%gene1),],col=col, alter_fun = alter_fun, column_order=colnames(sub2.s),remove_empty_columns = F, remove_empty_rows =F,
+             column_title = "more than median",
              bottom_annotation = ha.s2)   
+
 
 p1+p2
 
 dev.off()
 
 
-meta.therapy.sub1=meta.trail.f
+count.1a1=data.frame(rowSums(sub1.s!=""))
+count.1a2=data.frame(rowSums(sub1.s==""))
+
+count.1b1=data.frame(rowSums(sub2.s!=""))
+count.1b2=data.frame(rowSums(sub2.s==""))
+
+fr=cbind(count.1a1,count.1a2,count.1b1,count.1b2)
+
+fisherTable = lapply(seq_len(nrow(fr)), function(i) {
+  
+  ft_mat = matrix(c(fr[i,1], fr[i,2], fr[i,3], 
+                    fr[i,4]), byrow = TRUE, nrow = 2)
+  
+  xf = fisher.test(ft_mat, conf.int = TRUE, conf.level = 0.95)
+  pval = xf$p.value
+  or = xf$estimate
+  ci.up = xf$conf.int[2]
+  ci.low = xf$conf.int[1]
+  tdat = data.table::data.table(pathway = rownames(fr[i,]), fr[i,1], fr[i,2], 
+                                fr[i,3],fr[i,4],  pval = pval, or = or, ci.up = ci.up, ci.low = ci.low)
+  tdat
+})
 
 
-
-meta.therapy.sub1$bin <- rep(NA, nrow(meta.therapy.sub1))
-
-meta.therapy.sub1[meta.therapy.sub1$ARTERA.Score<0.5124, ][, "bin"] <- "bin1"
-
-meta.therapy.sub1[meta.therapy.sub1$ARTERA.Score>=0.5124, ][, "bin"] <- "bin2"
-
-
-
-
-meta.sub1=meta.therapy.sub1[which(meta.therapy.sub1$bin=="bin1"&meta.therapy.sub1$MDT.1.yes..0.no.==1),]
-meta.sub2=meta.therapy.sub1[which(meta.therapy.sub1$bin=="bin1"&meta.therapy.sub1$MDT.1.yes..0.no.==0),]
-meta.sub3=meta.therapy.sub1[which(meta.therapy.sub1$bin=="bin2"&meta.therapy.sub1$MDT.1.yes..0.no.==1),]
-meta.sub4=meta.therapy.sub1[which(meta.therapy.sub1$bin=="bin2"&meta.therapy.sub1$MDT.1.yes..0.no.==0),]
-
-
-meta.sub1.s=meta.sub1[order(meta.sub1$ARTERA.Score),]
-
-meta.sub2.s=meta.sub2[order(meta.sub2$ARTERA.Score),]
-meta.sub3.s=meta.sub3[order(meta.sub3$ARTERA.Score),]
-meta.sub4.s=meta.sub4[order(meta.sub4$ARTERA.Score),]
-
-
-#mutation=read.table("/Users/ysong/Desktop/P_Tran_ref/score/to_use/score_Phil_update/onco_matrix.txt",sep="\t",check.names=F,header=T,row.names=1)    
-
-mutation.sub=mutation[which(colnames(mutation)%in%meta.trail.f$Tumor_Sample_Barcode)]
-
-
-mutation.s=mutation.sub[,order(match(colnames(mutation.sub),meta.trail.f$Tumor_Sample_Barcode))]        
-
-mutation.s[is.na(mutation.s)]<-""
-sub1=mutation.s[which(colnames(mutation.s)%in%meta.sub1.s$Tumor_Sample_Barcode)]
-sub2=mutation.s[which(colnames(mutation.s)%in%meta.sub2.s$Tumor_Sample_Barcode)]
-sub3=mutation.s[which(colnames(mutation.s)%in%meta.sub3.s$Tumor_Sample_Barcode)]
-sub4=mutation.s[which(colnames(mutation.s)%in%meta.sub4.s$Tumor_Sample_Barcode)]
-
-sub1.s=sub1[order(match(colnames(sub1),meta.sub1.s$Tumor_Sample_Barcode))]
-
-sub2.s=sub2[order(match(colnames(sub2),meta.sub2.s$Tumor_Sample_Barcode))]
-sub3.s=sub3[order(match(colnames(sub3),meta.sub3.s$Tumor_Sample_Barcode))]
-sub4.s=sub4[order(match(colnames(sub4),meta.sub4.s$Tumor_Sample_Barcode))]
-
-ha.s1 = HeatmapAnnotation(therapy = meta.sub1.s$MDT.1.yes..0.no., score = anno_points(meta.sub1.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                          #annotation_height = unit(c(5, 5, 15), "mm"),
-                          annotation_legend_param = list(therapy = list(title = "therapy")))
-
-
-
-ha.s2 = HeatmapAnnotation(therapy = meta.sub2.s$MDT.1.yes..0.no., score = anno_points(meta.sub2.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                          #annotation_height = unit(c(5, 5, 15), "mm"),
-                          annotation_legend_param = list(therapy = list(title = "therapy")))
-
-
-ha.s3 = HeatmapAnnotation(therapy = meta.sub3.s$MDT.1.yes..0.no., score = anno_points(meta.sub3.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                          #annotation_height = unit(c(5, 5, 15), "mm"),
-                          annotation_legend_param = list(therapy = list(title = "therapy")))
-
-ha.s4 = HeatmapAnnotation(therapy = meta.sub4.s$MDT.1.yes..0.no., score = anno_points(meta.sub4.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                          #annotation_height = unit(c(5, 5, 15), "mm"),
-                          annotation_legend_param = list(therapy = list(title = "therapy")))
-
-pdf("mutation.clinical.pdf",30,20)
-
-p1=oncoPrint(sub1.s,col=col, alter_fun = alter_fun, column_order=colnames(sub1.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "score<median & MDT=1",
-             bottom_annotation = ha.s1)     
-
-p2=oncoPrint(sub2.s,col=col, alter_fun = alter_fun, column_order=colnames(sub2.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "score<median & MDT=0",
-             bottom_annotation = ha.s2)   
-
-p3=oncoPrint(sub3.s,col=col, alter_fun = alter_fun, column_order=colnames(sub3.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "score>=median & MDT=1",
-             bottom_annotation = ha.s3)   
-p4=oncoPrint(sub4.s,col=col, alter_fun = alter_fun, column_order=colnames(sub4.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "score>=median & MDT=0",
-             bottom_annotation = ha.s4)   
-p1+p2+p3+p4
-
-dev.off()
-
-
-
-gene = c('ATM','TP53','SPOP',"APC",'CTNNB1',"PIK3CA","RB1")
-pdf("mutation.trail.sub.pdf",30,10)
-
-p1=oncoPrint(sub1.s[which(rownames(sub1.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub1.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "1st bin",
-             bottom_annotation = ha.s1)     
-
-p2=oncoPrint(sub2.s[which(rownames(sub2.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub2.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "2nd bin",
-             bottom_annotation = ha.s2)   
-
-p3=oncoPrint(sub3.s[which(rownames(sub3.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub3.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "3rd bin",
-             bottom_annotation = ha.s3)   
-p4=oncoPrint(sub4.s[which(rownames(sub4.s)%in%gene),],col=col, alter_fun = alter_fun, column_order=colnames(sub4.s),remove_empty_columns = F, remove_empty_rows =F,
-             column_title = "4th bin",
-             bottom_annotation = ha.s4)   
-p1+p2+p3
-
-dev.off()
+fisherTable = data.table::rbindlist(l = fisherTable, use.names = TRUE, 
+                                    fill = TRUE)
+fisherTable = fisherTable[order(pval)]
+fisherTable[, `:=`(adjPval, p.adjust(p = pval, method = "fdr"))]
+colnames(fisherTable)[2:5] = c("group1", "total_number_group1","group2","total_number_group2")
 
 
 
 
-input_matrix.path=merge(pw,mutation.s,by.x="gene",by.y=0)
+write.table(fisherTable,"stat_median.all.txt",sep="\t",row.names=F)
+
+
+
+###############
+
+
+
+pw_rt = data.frame(
+  gene = c('ABL1', 'EGFR', 'ERBB2', 'EPHA3',"EPHA2",'MAP3K1','MAP2K7','LIN7A','RASA1','ERBB3', 'ERBB4', 'PDGFRA', 'PDGFRB', 'MET', 'FGFR1', 'FGFR2', 'FGFR3', 'FGFR4', 'FLT3', 'ALK', 'RET', 'ROS1', 'KIT', 'IGF1R', 'NTRK1', 'NTRK2', 'NTRK3', 'SOS1', 'GRB2', 'PTPN11', 'KRAS', 'HRAS', 'NRAS', 'RIT1', 'ARAF', 'BRAF', 'RAF1', 'RAC1', 'MAP2K1', 'MAP2K2', 'MAPK1', 'NF1', 'RASA1', 'CBL', 'ERRFI1', 'CBLB', 'CBLC', 'INSR', 'INSRR', 'IRS1', 'SOS2', 'SHC1', 'SHC2', 'SHC3', 'SHC4', 'RASGRP1', 'RASGRP2', 'RASGRP3', 'RASGRP4', 'RAPGEF1', 'RAPGEF2', 'RASGRF1', 'RASGRF2', 'FNTA', 'FNTB', 'RCE1', 'ICMT', 'MRAS', 'PLXNB1', 'MAPK3', 'ARHGAP35', 'RASA2', 'RASA3', 'RASAL1', 'RASAL2', 'RASAL3', 'SPRED1', 'SPRED2', 'SPRED3', 'DAB2IP', 'SHOC2', 'PPP1CA', 'SCRIB', 'PIN1', 'KSR1', 'KSR2', 'PEBP1', 'ERF', 'PEA15', 'JAK2', 'IRS2','EIF4EBP1', 'AKT1', 'AKT2', 'AKT3', 'AKT1S1', 'DEPDC5', 'DEPTOR', 'INPP4B', 'MAPKAP1', 'MLST8', 'MTOR', 'NPRL2', 'NPRL3', 'PDK1', 'PIK3CA', 'PIK3CB', 'PIK3R1', 'PIK3R2', 'PIK3R3', 'PPP2R1A', 'PTEN', 'RHEB', 'RICTOR', 'RPTOR', 'RPS6', 'RPS6KB1', 'STK11', 'TSC1', 'TSC2'),
+  pw = c('RTK/PIK3'),
+  stringsAsFactors = F
+)
+
+pw_cc = data.frame(
+  gene = c('CDKN1A', 'CDKN1B', 'CDKN2A', 'CDKN2B', 'CDKN2C', 'CCND1', 'CCND2', 'CCND3', 'CCNE1', 'CDK2', 'CDK4', 'CDK6', 'RB1', 'E2F1', 'E2F3'),
+  pw = c('CellCycle'),
+  stringsAsFactors = F
+)
+
+
+pw_wnt = data.frame(
+  gene = c('CHD8', 'LEF1', 'LGR4', 'LGR5', 'LRP5', 'LRP6', 'LZTR1', 'NDP', 'PORCN', 'RSPO1', 'SFRP1', 'SFRP2', 'SFRP4', 'SFRP5', 'SOST', 'TCF7L1', 'TLE1', 'TLE2', 'TLE3', 'TLE4', 'WIF1', 'ZNRF3', 'CTNNB1', 'DVL1', 'DVL2', 'DVL3', 'FRAT1', 'FRAT2', 'FZD1', 'FZD10', 'FZD2', 'FZD3', 'FZD4', 'FZD5', 'FZD6', 'FZD7', 'FZD8', 'FZD9', 'WNT1', 'WNT10A', 'WNT10B', 'WNT11', 'WNT16', 'WNT2', 'WNT3A', 'WNT4', 'WNT5A', 'WNT5B', 'WNT6', 'WNT7A', 'WNT7B', 'WNT8A', 'WNT8B', 'WNT9A', 'WNT9B', 'AMER1', 'APC', 'AXIN1', 'AXIN2', 'DKK1', 'DKK2', 'DKK3', 'DKK4', 'GSK3B', 'RNF43', 'TCF7', 'TCF7L2', 'CHD4'),
+  pw = c('WNT'),
+  stringsAsFactors = F
+)
+
+pw_tp = data.frame(
+  gene = c('TP53', 'MDM2', 'MDM4', 'ATM', 'CHEK2', 'RPS6KA3'),
+  pw = c('TP53'),
+  stringsAsFactors = F
+)
+
+pw_hippo = data.frame(
+  gene = c('STK4', 'STK3', 'SAV1', 'LATS1', 'LATS2', 'MOB1A', 'MOB1B', 'YAP1', 'WWTR1', 'TEAD1', 'TEAD2', 'TEAD3', 'TEAD4', 'PTPN14', 'NF2', 'WWC1', 'TAOK1', 'TAOK2', 'TAOK3', 'CRB1', 'CRB2', 'CRB3', 'LLGL1', 'LLGL2', 'HMCN1', 'SCRIB', 'HIPK2', 'FAT1', 'FAT2', 'FAT3', 'FAT4', 'DCHS1', 'DCHS2', 'CSNK1E', 'CSNK1D', 'AJUBA', 'LIMD1', 'WTIP'),
+  pw = c('HIPPO'),
+  stringsAsFactors = F
+)
+
+pw_tgf = data.frame(
+  gene = c('TGFBR1', 'TGFBR2', 'ACVR2A', 'ACVR1B', 'SMAD2', 'SMAD3', 'SMAD4'),
+  pw = c('TGF-Beta'),
+  stringsAsFactors = F
+)
+
+pw_chre = data.frame(
+  gene = c('ARID1A', 'ARID2','ARID1B','SMARCA4','PBRM1','KDM6A','MBD6','HIST1H3B'),
+  pw = c('ChrRemod'),
+  stringsAsFactors = F
+)
+
+
+pw_myc = data.frame(
+  gene = c('MAX', 'MGA', 'MLX', 'MLXIP', 'MLXIPL', 'MNT', 'MXD1', 'MXD3', 'MXD4', 'MXI1', 'MYC', 'MYCL', 'MYCN'),
+  pw = c('MYC'),
+  stringsAsFactors = F
+)
+pw_notch = data.frame(
+  gene = c('ARRDC1', 'CNTN6', 'CREBBP', 'EP300', 'HES1', 'HES2', 'HES3', 'HES4', 'HES5', 'HEY1', 'HEY2', 'HEYL', 'KAT2B', 'KDM5A', 'NOTCH1', 'NOTCH2', 'NOTCH3', 'NOTCH4', 'NOV', 'NRARP', 'PSEN2', 'LFNG', 'ITCH', 'NCSTN', 'SPEN', 'JAG1', 'APH1A', 'FBXW7', 'FHL1', 'THBS2', 'HDAC2', 'MFAP2', 'CUL1', 'RFNG', 'NCOR1', 'NCOR2', 'MFAP5', 'HDAC1', 'NUMB', 'JAG2', 'MAML3', 'MFNG', 'CIR1', 'CNTN1', 'MAML1', 'MAML2', 'NUMBL', 'PSEN1', 'PSENEN', 'RBPJ', 'RBPJL', 'RBX1', 'SAP30', 'SKP1', 'SNW1', 'CTBP1', 'CTBP2', 'ADAM10', 'APH1B', 'ADAM17', 'DLK1', 'DLL1', 'DLL3', 'DLL4', 'DNER', 'DTX1', 'DTX2', 'DTX3', 'DTX3L', 'DTX4', 'EGFL7'),
+  pw = c('NOTCH'),
+  stringsAsFactors = F
+)
+
+pw_gi = data.frame(
+  gene = c('GATA6', 'GATA4','MUC6'),
+  pw = c('GI'),
+  stringsAsFactors = F
+)
+
+
+
+pw = rbind(pw_rt, pw_cc,pw_wnt,pw_tp,pw_hippo,pw_tgf,pw_chre,pw_myc,pw_notch,pw_gi)
+
+pw_col = RColorBrewer::brewer.pal(n = 11, name = 'Set3')[1:11]
+names(pw_col) = unique(pw$pw)
+
+
+col0 = c("1" = "red","2" = "red","3" = "red","4"="red","5"="red","6"="red")
+
+alter_fun0 = list(
+  background = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = "white", col = NA))
+  },
+  # big red
+  
+  # big red
+  "1" = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col0["1"], col = NA))
+    
+  },
+  # big red
+  "2" = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col0["2"], col = NA))
+    
+  },
+  # big red
+  "3" = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col0["3"], col = NA))
+    
+  },
+  "4" = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col0["4"], col = NA))
+    
+  },
+  "5" = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col0["5"], col = NA))
+    
+  },
+  
+  # big red
+  "6" = function(x, y, w, h) {
+    grid.rect(x, y, w-unit(2, "pt"), h-unit(2, "pt"), 
+              gp = gpar(fill = col0["6"], col = NA))
+    
+  })
+
+
+
+
+input_matrix.path=merge(pw,mutation.sub1,by.x="gene",by.y=0)
 
 input_matrix.path[input_matrix.path== ''] <- NA
 input_matrix.path1=input_matrix.path
@@ -266,101 +478,158 @@ input_matrix.path1[is.na(input_matrix.path1)] <- ""
 rownames(input_matrix.path1)=input_matrix.path1$gene
 
 
+bin1=meta.sub1.s
+bin2=meta.sub2.s
 
 
 path.agg.s1=input_matrix.path1[,which(colnames(input_matrix.path1)%in%meta.sub1.s$Tumor_Sample_Barcode)]
 path.agg.s2=input_matrix.path1[,which(colnames(input_matrix.path1)%in%meta.sub2.s$Tumor_Sample_Barcode)]
-path.agg.s3=input_matrix.path1[,which(colnames(input_matrix.path1)%in%meta.sub3.s$Tumor_Sample_Barcode)]
-path.agg.s4=input_matrix.path1[,which(colnames(input_matrix.path1)%in%meta.sub4.s$Tumor_Sample_Barcode)]
 
 path.agg.s1=path.agg.s1[order(match(colnames(path.agg.s1),meta.sub1.s$Tumor_Sample_Barcode))]
 path.agg.s2=path.agg.s2[order(match(colnames(path.agg.s2),meta.sub2.s$Tumor_Sample_Barcode))]
-path.agg.s3=path.agg.s3[order(match(colnames(path.agg.s3),meta.sub3.s$Tumor_Sample_Barcode))]
-path.agg.s4=path.agg.s4[order(match(colnames(path.agg.s4),meta.sub4.s$Tumor_Sample_Barcode))]
-
-
 
 path.agg.s1$pw=input_matrix.path1$pw
 path.agg.s2$pw=input_matrix.path1$pw
 
 
-path.agg.s3$pw=input_matrix.path1$pw
-path.agg.s4$pw=input_matrix.path1$pw
+count.1a1=data.frame(rowSums(path.agg.s1!=""))
+count.1a2=data.frame(rowSums(path.agg.s1==""))
+
+count.1b1=data.frame(rowSums(path.agg.s2!=""))
+count.1b2=data.frame(rowSums(path.agg.s2==""))
+
+fr=cbind(count.1a1,count.1a2,count.1b1,count.1b2)
+
+fisherTable = lapply(seq_len(nrow(fr)), function(i) {
+  
+  ft_mat = matrix(c(fr[i,1], fr[i,2], fr[i,3], 
+                    fr[i,4]), byrow = TRUE, nrow = 2)
+  
+  xf = fisher.test(ft_mat, conf.int = TRUE, conf.level = 0.95)
+  pval = xf$p.value
+  or = xf$estimate
+  ci.up = xf$conf.int[2]
+  ci.low = xf$conf.int[1]
+  tdat = data.table::data.table(pathway = rownames(fr[i,]), fr[i,1], fr[i,2],
+                                fr[i,3],fr[i,4] ,pval = pval, or = or, ci.up = ci.up, ci.low = ci.low)
+  tdat
+})
 
 
-ha.s1 = HeatmapAnnotation(therapy = meta.sub1.s$MDT.1.yes..0.no., score = anno_points(meta.sub1.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                          #annotation_height = unit(c(5, 5, 15), "mm"),
-                          annotation_legend_param = list(therapy = list(title = "therapy")))
-
-
-
-ha.s2 = HeatmapAnnotation(therapy = meta.sub2.s$MDT.1.yes..0.no., score = anno_points(meta.sub2.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                          #annotation_height = unit(c(5, 5, 15), "mm"),
-                          annotation_legend_param = list(therapy = list(title = "therapy")))
-
-
-ha.s3 = HeatmapAnnotation(therapy = meta.sub3.s$MDT.1.yes..0.no., score = anno_points(meta.sub3.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                          #annotation_height = unit(c(5, 5, 15), "mm"),
-                          annotation_legend_param = list(therapy = list(title = "therapy")))
-
-ha.s4 = HeatmapAnnotation(therapy = meta.sub4.s$MDT.1.yes..0.no., score = anno_points(meta.sub4.s$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                          col = list(therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                          #annotation_height = unit(c(5, 5, 15), "mm"),
-                          annotation_legend_param = list(therapy = list(title = "therapy")))
+fisherTable = data.table::rbindlist(l = fisherTable, use.names = TRUE, 
+                                    fill = TRUE)
+fisherTable = fisherTable[order(pval)]
+fisherTable[, `:=`(adjPval, p.adjust(p = pval, method = "fdr"))]
+colnames(fisherTable)[2:5] = c("group1", "total_number_group1","group2","total_number_group2")
 
 
 
 
+write.table(fisherTable,"stat_median.pathway.txt",sep="\t",row.names=F)
 
-pdf("mutation.trail.MDT.PATH.pdf",30,10)
+bin1=meta.sub1.s
+bin2=meta.sub2.s
+
+ha1 = HeatmapAnnotation(pfs = bin1$pfs, crpc = bin1$crpc,os=bin1$status,therapy=bin1$MDT.1.yes..0.no.,
+                        score = anno_points(bin1$ARTERA.Score, ylim = c(0, max(bin1$ARTERA.Score, na.rm = TRUE)), axis = TRUE),
+                        col = list(
+                                   pfs = c("1" = "red", "0" = "blue"),
+                                   crpc = c("1"="red","0"="blue","ex"="grey"),
+                                   os = c("1"="red","0"="blue","na"="grey"),
+                                therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                        #annotation_height = unit(c(5, 5, 15), "mm"),
+                        annotation_legend_param = list(pfs = list(title = "PFS"),
+                                                       os = list(title = "OS"),
+                                                       crpc=list(title="crpc"),
+                                                       therapy=list(title="therapy")))
+
+
+ha2 = HeatmapAnnotation(pfs = bin2$pfs, crpc = bin2$crpc,os=bin2$status,therapy=bin2$MDT.1.yes..0.no.,
+                        score = anno_points(bin2$ARTERA.Score, ylim = c(0, max(bin2$ARTERA.Score, na.rm = TRUE)), axis = TRUE),
+                        col = list(
+                          pfs = c("1" = "red", "0" = "blue"),
+                          crpc = c("1"="red","0"="blue","ex"="grey"),
+                          os = c("1"="red","0"="blue","na"="grey"),
+                          therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                        #annotation_height = unit(c(5, 5, 15), "mm"),
+                        annotation_legend_param = list(pfs = list(title = "PFS"),
+                                                       os = list(title = "OS"),
+                                                       crpc=list(title="crpc"),
+                                                       therapy=list(title="therapy")))
+
+
+
+pdf("~/Desktop/path.median.pdf",20,20)
+title1="less than median"
+
 
 t02=oncoPrint(path.agg.s1[-ncol(path.agg.s1)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              column_order=colnames(path.agg.s1[-ncol(path.agg.s1)]),bottom_annotation = ha.s1,
+              column_order=colnames(path.agg.s1[-ncol(path.agg.s1)]),bottom_annotation = ha1,
               alter_fun = alter_fun, col = col,row_split=path.agg.s1$pw,
               #row_title_rot = switch(row_title_side[1], "left" = 0),
               
-              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="score<median & MDT=1")
+              row_title_gp = gpar(fontsize = 10) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 8),column_title=title1)
 
-
+title2="more than median"
 
 t03=oncoPrint(path.agg.s2[-ncol(path.agg.s2)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              column_order=colnames(path.agg.s2[-ncol(path.agg.s2)]),bottom_annotation = ha.s2,
-              alter_fun = alter_fun, col = col,row_split=path.agg.s2$pw,
+              column_order=colnames(path.agg.s2[-ncol(path.agg.s2)]),bottom_annotation = ha2,
+              alter_fun = alter_fun, col = col,row_split=path.agg.s1$pw,
               #row_title_rot = switch(row_title_side[1], "left" = 0),
               
-              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="score<median & MDT=0")
+              row_title_gp = gpar(fontsize = 10) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize =8),column_title=title2)
 
-t04=oncoPrint(path.agg.s3[-ncol(path.agg.s3)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              column_order=colnames(path.agg.s3[-ncol(path.agg.s3)]),bottom_annotation = ha.s3,
-              alter_fun = alter_fun, col = col,row_split=path.agg.s3$pw,
-              #row_title_rot = switch(row_title_side[1], "left" = 0),
-              
-              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="score>=median&MDT=1")
-
-
-
-t05=oncoPrint(path.agg.s4[-ncol(path.agg.s4)], remove_empty_columns = FALSE, remove_empty_rows = F,
-              column_order=colnames(path.agg.s4[-ncol(path.agg.s4)]),bottom_annotation = ha.s4,
-              alter_fun = alter_fun, col = col,row_split=path.agg.s4$pw,
-              #row_title_rot = switch(row_title_side[1], "left" = 0),
-              
-              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title="score>=median&MDT=0")
-
-
-draw(t02+t03+t04+t05,heatmap_legend_side="bottom", annotation_legend_side="bottom")
-
-
-
-
+draw(t02+t03,heatmap_legend_side="bottom", annotation_legend_side="bottom")
 dev.off()
 
 
-path.gene=cbind(path.agg.s1,path.agg.s2,path.agg.s3,path.agg.s4)
 
-df1=path.gene[,-c(13,20,34,40)]
+
+
+
+count.1a1=data.frame(rowSums(path.agg.s1!=""))
+count.1a2=data.frame(rowSums(path.agg.s1==""))
+
+count.1b1=data.frame(rowSums(path.agg.s2!=""))
+count.1b2=data.frame(rowSums(path.agg.s2==""))
+
+fr=cbind(count.1a1,count.1a2,count.1b1,count.1b2)
+
+fisherTable = lapply(seq_len(nrow(fr)), function(i) {
+  
+  ft_mat = matrix(c(fr[i,1], fr[i,2], fr[i,3], 
+                    fr[i,4]), byrow = TRUE, nrow = 2)
+  
+  xf = fisher.test(ft_mat, conf.int = TRUE, conf.level = 0.95)
+  pval = xf$p.value
+  or = xf$estimate
+  ci.up = xf$conf.int[2]
+  ci.low = xf$conf.int[1]
+  tdat = data.table::data.table(pathway = rownames(fr[i,]), fr[i,1], 
+                                fr[i,3], pval = pval, or = or, ci.up = ci.up, ci.low = ci.low)
+  tdat
+})
+
+
+fisherTable = data.table::rbindlist(l = fisherTable, use.names = TRUE, 
+                                    fill = TRUE)
+fisherTable = fisherTable[order(pval)]
+fisherTable[, `:=`(adjPval, p.adjust(p = pval, method = "fdr"))]
+colnames(fisherTable)[2:3] = c("group1", "group2")
+
+
+
+
+write.table(fisherTable,"stat_median.pathway.txt",sep="\t",row.names=F)
+
+
+
+
+###aggregate to pathway
+
+path.gene=cbind(path.agg.s1,path.agg.s2)
+
+df1=path.gene[,!grepl("pw",colnames(path.gene))]
 df1.m=melt(as.matrix(df1))
 df1.m$value=gsub("Missense_Mutation",1,df1.m$value )
 df1.m$value=gsub("Nonsense_Mutation",1,df1.m$value )
@@ -374,16 +643,16 @@ df3a=dcast(df1.m,Var1~Var2,drop=F,fill=0,value.var="value")
 df3a$pw=path.gene$pw
 
 
-df3a[2:37] <- lapply(df3a[2:37], function(x) as.numeric(as.character(x)))
+df3a[2:169] <- lapply(df3a[2:169], function(x) as.numeric(as.character(x)))
 df3a[is.na(df3a)]<-0
 
 
 
-path.agg=aggregate(df3a[,-c(1,38)], by=list(pathway=df3a$pw), FUN=sum)
+path.agg=aggregate(df3a[,-c(1,170)], by=list(pathway=df3a$pw), FUN=sum)
 rownames(path.agg)=path.agg$pathway
-path.agg.s=path.agg[order(match(colnames(path.agg),meta.therapy.sub1$Tumor_Sample_Barcode))]
+path.agg.s=path.agg[order(match(colnames(path.agg),meta.therapy$Tumor_Sample_Barcode))]
 
-tmp=path.agg.s[1:36]
+tmp=path.agg.s[1:168]
 tmp1=tmp %>% mutate_if(is.numeric, ~1 * (. != 0))
 
 #path.agg.s[,1:148]=path.agg.s[,1:148] %% mutate_if(is.numeric, ~1 * (. != 0))
@@ -400,28 +669,24 @@ path.agg[path.agg == 0] <- ""
 
 bin1=meta.sub1.s
 bin2=meta.sub2.s
-bin3=meta.sub3.s
-bin4=meta.sub4.s
+
 
 
 
 path.agg.s1=path.agg[,which(colnames(path.agg)%in%bin1$Tumor_Sample_Barcode)]
 path.agg.s2=path.agg[,which(colnames(path.agg)%in%bin2$Tumor_Sample_Barcode)]
-path.agg.s3=path.agg[,which(colnames(path.agg)%in%bin3$Tumor_Sample_Barcode)]
-path.agg.s4=path.agg[,which(colnames(path.agg)%in%bin4$Tumor_Sample_Barcode)]
 
 path.agg.s1=path.agg.s1[order(match(colnames(path.agg.s1),bin1$Tumor_Sample_Barcode))]
 path.agg.s2=path.agg.s2[order(match(colnames(path.agg.s2),bin2$Tumor_Sample_Barcode))]
-path.agg.s3=path.agg.s3[order(match(colnames(path.agg.s3),bin3$Tumor_Sample_Barcode))]
-path.agg.s4=path.agg.s4[order(match(colnames(path.agg.s4),bin4$Tumor_Sample_Barcode))]
+
 
 ha1 = HeatmapAnnotation(pfs = bin1$pfs, crpc = bin1$crpc,os=bin1$status,therapy=bin1$MDT.1.yes..0.no.,
                         score = anno_points(bin1$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
                         col = list(
-                          pfs = c("1" = "red", "0" = "blue"),
-                          crpc = c("1"="red","0"="blue","ex"="grey"),
-                          os = c("1"="red","0"="blue","na"="grey"),
-                          therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
+                                   pfs = c("1" = "red", "0" = "blue"),
+                                   crpc = c("1"="red","0"="blue","ex"="grey"),
+                                   os = c("1"="red","0"="blue","na"="grey"),
+                                   therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
                         #annotation_height = unit(c(5, 5, 15), "mm"),
                         annotation_legend_param = list(pfs = list(title = "PFS"),
                                                        os = list(title = "OS"),
@@ -429,7 +694,7 @@ ha1 = HeatmapAnnotation(pfs = bin1$pfs, crpc = bin1$crpc,os=bin1$status,therapy=
                                                        therapy=list(title="therapy")))
 
 
-ha2 = HeatmapAnnotation(pfs = bin2$pfs, crpc = bin2$crpc,os=bin2$status,therapy=bin2$MDT.1.yes..0.no.,
+  ha2 = HeatmapAnnotation(pfs = bin2$pfs, crpc = bin2$crpc,os=bin2$status,therapy=bin2$MDT.1.yes..0.no.,
                         score = anno_points(bin2$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
                         col = list(
                           pfs = c("1" = "red", "0" = "blue"),
@@ -442,33 +707,9 @@ ha2 = HeatmapAnnotation(pfs = bin2$pfs, crpc = bin2$crpc,os=bin2$status,therapy=
                                                        crpc=list(title="crpc"),
                                                        therapy=list(title="therapy")))
 
-ha3 = HeatmapAnnotation(pfs = bin3$pfs, crpc = bin3$crpc,os=bin3$status,therapy=bin3$MDT.1.yes..0.no.,
-                        score = anno_points(bin3$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                        col = list(
-                          pfs = c("1" = "red", "0" = "blue"),
-                          crpc = c("1"="red","0"="blue","ex"="grey"),
-                          os = c("1"="red","0"="blue","na"="grey"),
-                          therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                        #annotation_height = unit(c(5, 5, 15), "mm"),
-                        annotation_legend_param = list(pfs = list(title = "PFS"),
-                                                       os = list(title = "OS"),
-                                                       crpc=list(title="crpc"),
-                                                       therapy=list(title="therapy")))
 
-ha4 = HeatmapAnnotation(pfs = bin4$pfs, crpc = bin4$crpc,os=bin4$status,therapy=bin4$MDT.1.yes..0.no.,
-                        score = anno_points(bin4$ARTERA.Score, ylim = c(0, max(1, na.rm = TRUE)), axis = TRUE),
-                        col = list(
-                          pfs = c("1" = "red", "0" = "blue"),
-                          crpc = c("1"="red","0"="blue","ex"="grey"),
-                          os = c("1"="red","0"="blue","na"="grey"),
-                          therapy = c("NA"="grey","0" = "green", "1" = "blue","3"="yellow","4"="orange","5"="red","6"="brown","7"="black")),
-                        #annotation_height = unit(c(5, 5, 15), "mm"),
-                        annotation_legend_param = list(pfs = list(title = "PFS"),
-                                                       os = list(title = "OS"),
-                                                       crpc=list(title="crpc"),
-                                                       therapy=list(title="therapy")))
 
-pdf("~/Desktop/path.agg.score.top.bot.mdt.path.pdf",15,5)
+pdf("~/Desktop/path.agg.score.median.pdf",20,10)
 
 
 
@@ -477,8 +718,7 @@ t02=oncoPrint(path.agg.s1, remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun0, col = col,
               #row_title_rot = switch(row_title_side[1], "left" = 0),
               
-              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),
-              column_title="score<median&MDT=1(12)")
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title=title1)
 
 
 
@@ -487,22 +727,45 @@ t03=oncoPrint(path.agg.s2, remove_empty_columns = FALSE, remove_empty_rows = F,
               alter_fun = alter_fun0, col = col,
               #row_title_rot = switch(row_title_side[1], "left" = 0),
               
-              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),
-              column_title="score<median&MDT=0(6)")
-t04=oncoPrint(path.agg.s3, remove_empty_columns = FALSE, remove_empty_rows = F,
-              column_order=colnames(path.agg.s3),bottom_annotation = ha3,
-              alter_fun = alter_fun0, col = col,
-              #row_title_rot = switch(row_title_side[1], "left" = 0),
-              
-              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),
-              column_title="score>median&MDT=1(13)")
-t05=oncoPrint(path.agg.s4, remove_empty_columns = FALSE, remove_empty_rows = F,
-              column_order=colnames(path.agg.s4),bottom_annotation = ha4,
-              alter_fun = alter_fun0, col = col,
-              #row_title_rot = switch(row_title_side[1], "left" = 0),
-              
-              row_title_gp = gpar(fontsize = 5) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),
-              column_title="score>median&MDT=0(5)")
+              row_title_gp = gpar(fontsize = 6) ,show_column_names = TRUE,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 5),column_title=title2)
 
-draw(t02+t03+t04+t05,heatmap_legend_side="bottom", annotation_legend_side="bottom")
+draw(t02+t03,heatmap_legend_side="bottom", annotation_legend_side="bottom")
 dev.off()
+
+
+count.1a1=data.frame(rowSums(path.agg.s1!=""))
+count.1a2=data.frame(rowSums(path.agg.s1==""))
+
+count.1b1=data.frame(rowSums(path.agg.s2!=""))
+count.1b2=data.frame(rowSums(path.agg.s2==""))
+
+fr=cbind(count.1a1,count.1a2,count.1b1,count.1b2)
+
+fisherTable = lapply(seq_len(nrow(fr)), function(i) {
+  
+  ft_mat = matrix(c(fr[i,1], fr[i,2], fr[i,3], 
+                    fr[i,4]), byrow = TRUE, nrow = 2)
+  
+  xf = fisher.test(ft_mat, conf.int = TRUE, conf.level = 0.95)
+  pval = xf$p.value
+  or = xf$estimate
+  ci.up = xf$conf.int[2]
+  ci.low = xf$conf.int[1]
+  tdat = data.table::data.table(pathway = rownames(fr[i,]), fr[i,1], 
+                                fr[i,3], pval = pval, or = or, ci.up = ci.up, ci.low = ci.low)
+  tdat
+})
+
+
+fisherTable = data.table::rbindlist(l = fisherTable, use.names = TRUE, 
+                                    fill = TRUE)
+fisherTable = fisherTable[order(pval)]
+fisherTable[, `:=`(adjPval, p.adjust(p = pval, method = "fdr"))]
+colnames(fisherTable)[2:3] = c("group1", "group2")
+
+
+
+
+write.table(fisherTable,"stat_median.pathway.agg.txt",sep="\t",row.names=F)
+
+
