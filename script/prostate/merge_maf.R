@@ -45,7 +45,7 @@ merged_mafs_TN_1000G_sub$DNA.Mutations <- paste(merged_mafs_TN_1000G_sub$Hugo_Sy
 merged_mafs_TN_1000G_sub <- merged_mafs_TN_1000G_sub %>% filter(tumor_f < 0.40 & tot_depth_tumor>=10)
 
 sub1=read.maf(merged_mafs_TN_1000G_sub)
-sub1=subsetMaf(sub1, query=  "ClinVar_VCF_CLNSIG %in% clin[c(2,4,5,8,11,13,16)]",dropLevels =F)
+sub1=subsetMaf(sub1, query=  "ClinVar_VCF_CLNSIG %in% clin[c(3,4,5,8,13,15,16,18)]",dropLevels =F)
 #d <- merge_mafs(lapply(Sys.glob("mafs/Patient*.maf"), read.maf))
 
 # Load sample information
