@@ -28,7 +28,7 @@ var.classes=c("Frame_Shift_Del", "Frame_Shift_Ins", "Splice_Site", "Translation_
 merged_mafs_TN_1000G <- maftools::merge_mafs(list.all.maf.files, vc_nonSyn=var.classes)
 
 clin=unique(merged_mafs_TN_1000G@data$ClinVar_VCF_CLNSIG)
-sub=subsetMaf(merged_mafs_TN_1000G, query=  "ClinVar_VCF_CLNSIG %in% clin[c(3,4,5,8,13,15,16,18)]",dropLevels =F)
+sub=subsetMaf(merged_mafs_TN_1000G, query=  "ClinVar_VCF_CLNSIG %in% clin[c(2,4,5,8,11,13,16)]",dropLevels =F)
 
 saveRDS(sub,"non_synonous_tempus.patho.like-patho.patho-conflict.gatk.rds")
 
