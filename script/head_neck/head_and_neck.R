@@ -1,3 +1,9 @@
+###vcf2maf
+#for i in *.vcf;do echo perl /usr/local/packages/vcf2maf/vcf2maf.pl --input-vcf $i --output-maf $i.maf --vep-path /usr/local/packages/miniconda3/envs/vep/bin --ref-fasta /local/db/vep/Homo_sapiens.GRCh37.dna.toplevel.fa.gz --ncbi-build GRCh37;done>step1_vcf_maf.pbs
+#merge all maf together
+#https://github.com/songeric1107/Somatic_mutation_analysis/blob/main/script/prostate/merge_maf.R
+
+
 library(maftools)
 setwd("head_neck/")
 
