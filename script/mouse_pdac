@@ -1,0 +1,1327 @@
+setwd("/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/")
+count1=read.table("/Volumes/projects-t3/PTRAN/Projects_starting_Jan2024/ysong/ajmal_rnaseq_both_batch/raw_count/batch1/all_counts.txt",sep="\t",header=T,row.names=1)
+count2=read.table("/Volumes/projects-t3/PTRAN/Projects_starting_Jan2024/ysong/ajmal_rnaseq_both_batch/raw_count/batch2/all_counts.txt",sep="\t",header=T,row.names=1,check.names=F)
+colnames(count1)=paste("batch1",colnames(count1),sep="_")
+colnames(count2)=paste("batch2",colnames(count2),sep="_")
+
+c12=merge(count1,count2,by=0)
+#write.table(c12,"row_count.txt",sep="\t",quote=F,row.names=F)
+
+library(RUVSeq);library(reshape2)
+
+meta=read.table("/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/meta_pdacc_morbid.txt",sep="\t",header=T)
+
+allcounts_htseq=c12[which(colnames(c12)%in%meta$name)]
+rownames(allcounts_htseq)=c12$Row.names
+
+y <- apply(as.matrix(allcounts_htseq), 2, as.numeric)
+rownames(y)<-rownames(allcounts_htseq)
+no0<-data.frame(y[rowSums(y)!=0, ], check.names = FALSE)
+no0s=no0[order(names(no0))]
+
+setwd("/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/")
+meta=read.table("meta_pdacc_morbid.txt",sep="\t",header=T)
+meta.sub=meta[which(meta$batch!="Rerun in Batch2"&meta$Tissue=="Pancreas"&meta$Timepoint!="exclude"),]
+#write.table(meta.sub,"meta_to_use.txt",sep="\t",quote=F,row.names=F)
+library(sva)
+meta.sub0=meta.sub[which(meta.sub$Tissue=="Pancreas"),]
+
+meta.sub1=meta.sub[which(meta.sub$Tissue=="Pancreas"& meta.sub$Genotype%in%c("PGRT","KPC")),]
+colnames(no0s)=gsub("[.]","-",colnames(no0s))
+
+no0s=no0s[,which(colnames(no0s)%in%meta.sub1$name)]
+
+
+
+infoF<-meta.sub1
+
+info_cond.s=infoF[order(match(infoF$name,colnames(no0s))),]
+no0s1=no0s[which(colnames(no0s)%in%meta.sub$name)]
+
+adjusted_counts <- data.frame(ComBat_seq(no0s1, batch=info_cond.s$batch_id, group=as.numeric(info_cond.s$group6)))
+
+library(NMF)
+estim.r.IR=readRDS("/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/nmf_PGRT_KPC.2_6.rds")
+
+
+
+########nmf
+
+set.seed(100)
+lee2 = data.frame(NMF::predict(nmf_lee_2 , what = "consensus"))
+colnames(lee2)="nmf_cluster"
+rownames(lee2)=gsub("[.]","-",rownames(lee2))
+
+lee1.ann=merge(meta.sub1,lee2,by.x="name",by.y=0)
+heat1=data.frame(estim.r.IR$consensus$'3')
+rownames(heat1)=gsub("[.]","-",rownames(heat1))
+colnames(heat1)=gsub("[.]","-",colnames(heat1))
+lee1.ann=lee1.ann[order(match(lee1.ann$name,colnames(heat1))),]
+#write.table(lee1.ann,"zscore/nmf_cluster.txt",sep="\t",quote=F)
+
+df=adjusted_counts
+
+ann=read.table("~/Desktop/annotation/mouse_104.txt",sep="\t",header=T)
+df1=merge(ann,df,by.x="Gene.stable.ID",by.y=0)
+t1=df1[grep("Twist1",df1$Gene.name),]
+colnames(t1)=gsub("[.]","-",colnames(t1))
+t1m=melt(t1)
+
+
+
+
+t1.ann=merge(t1m,meta,by.x="variable",by.y="name")
+
+set1=readRDS("/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/set1.rds")
+
+###with W_1 in it for DE analysis
+new_meta=data.frame(pData(set1))
+
+count_correct1 <- set1@assayData$normalizedCounts
+tg=data.frame(count_correct1[grep("ENSMUSG00000035799",rownames(count_correct1)),])
+colnames(tg)="Twist1"
+#rownames(tg)=rownames(count_correct1)
+
+set1=readRDS("/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/set1.rds")
+#norm_countsf = "/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/vsd.txt"
+#counts_batch_corrected0=read.table(norm_countsf,sep="\t",header=T, as.is = T)
+
+
+count_correct1 <- set1@assayData$normalizedCounts
+#tg=count_correct1[grep("ENSMUSG00000035799",rownames(count_correct1)),]
+#count_correct1m=sweep(count_correct1,2,colSums(count_correct1),`/`)*10^6
+
+library(preprocessCore)
+#g1g2.nq = normalize.quantiles(as.matrix(count_correct1m))
+
+
+#rownames(g1g2.nq)=rownames(count_correct1m)
+#colnames(g1g2.nq)=colnames(count_correct1m)
+
+
+
+logCounts <- log2(t(count_correct1)+1)
+
+###################
+marker1=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/motiffit.marker.txt",sep="\t",header=F)
+
+marker2=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/collisson_marker.txt",sep="\t",header=F)
+
+marker3=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/puleo/Puleo_readable_list.tsv",sep="\t",header=T)
+
+
+library(reshape2)
+marker4=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/michelle.txt",sep="\t",header=F)
+marker5=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/Biomarkers Papers/bailey/Bailey_readable_list.tsv",sep="\t",header=F)
+marker5.uniq=marker5[which(marker5$V2!="not unique"),]
+
+marker4=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/PDAC_subtype_ref_db/PDAC Gene List.txt",sep="\t",header=T)
+
+marker4m=melt(as.matrix(marker4))
+
+#######################
+
+
+ann=read.table("~/Desktop/annotation/mouse_104.txt",sep="\t",header=T)
+
+#tpm12.ann=merge(ann,counts_batch_corrected0,by.x="Gene.stable.ID",by.y=0)
+
+homolog=read.table("~/Desktop/annotation/mouse_human_homolog.txt",sep="\t",header=T)
+
+marker.sc=marker4m[,c(3,2)]
+names(marker.sc)=c("V1","V2")
+
+allmarker=unique(rbind(marker1,marker2,marker5.uniq,marker.sc))
+
+bailey.homo=merge(unique(homolog[,4:5]),allmarker,by.x="Gene.name",by.y="V1")
+bailey.homo1=unique(bailey.homo[which(bailey.homo$Mouse.gene.name!=""),-c(1)])
+gene_qsb=unique(bailey.homo1[which(bailey.homo1$V2%in%c("Squamous","Squamoid","QM-PDA","BASAL-LIKE")),1])
+
+
+
+ann=read.table("~/Desktop/annotation/mouse_104.txt",sep="\t",header=T)
+s1=merge(ann,t(logCounts),by.x="Gene.stable.ID",by.y=0)
+s1=s1[which(s1$Gene.name%in%bailey.homo1$Mouse.gene.name),]
+
+t1=s1[which(s1$Gene.name=="Twist1"),]
+
+
+
+
+library(reshape2)
+library(NMF)
+#estim.r.IR=readRDS("/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/nmf_PGRT_KPC.2_6.cpm.rds")
+
+setwd("~/Desktop/nmf_cpm_qua/")
+
+estim.r.IR=readRDS("/Users/ysong/Desktop/nmf_cpm_qua/nmf_930.correct.rds")
+
+nmf_lee_2 = estim.r.IR$fit$'3'
+lee2 = data.frame(NMF::predict(nmf_lee_2 , what = "consensus"))
+meta.sub1=pData(set1)
+
+W <- basis(nmf_lee_2)
+H <- coef(nmf_lee_2)
+log_H <- log2(H + 1)
+
+hc <- hclust(dist(t(H)))  # Cluster samples based on the coefficient matrix
+
+# Extract the dendrogram
+dend <- as.dendrogram(hc)
+
+
+#nmf_dend <- nmf_lee_2@hclust@dendrogram  # Dendrogram used in NMF clustering
+
+#write.table(meta.sub1,"~/Desktop/meta.sub1..cpm.qua.txt",sep="\t",quote=F)
+########nmf
+meta.sub1=read.table("~/Desktop/human_pdac_1007/meta_pca_1007.txt",sep="\t",header=T)
+
+set.seed(100)
+colnames(lee2)="nmf_cluster"
+rownames(lee2)=gsub("[.]","-",rownames(lee2))
+
+lee1.ann=merge(meta.sub1,lee2,by.x="name",by.y=0)
+heat1=data.frame(estim.r.IR$consensus$'3')
+rownames(heat1)=gsub("[.]","-",rownames(heat1))
+colnames(heat1)=gsub("[.]","-",colnames(heat1))
+
+lee1.ann=lee1.ann[order(match(lee1.ann$name,colnames(heat1))),]
+
+
+
+zscore_mof=read.table("~/Desktop/zscore/zscore_moffit.txt",sep="\t",header=T)
+zscore_bailey=read.table("~/Desktop/zscore/zscore_bailey.txt",sep="\t",header=T,row.names=1)
+zscore_col=read.table("~/Desktop/zscore/zscore_collison.txt",sep="\t",header=T,row.names=1)
+zscore_sc=read.table("~/Desktop/zscore/zscore_sc.txt",sep="\t",header=T,row.names=1)
+
+
+colnames(zscore_mof)=paste(colnames(zscore_mof),"(Moffit et al. (2015))",sep=" ")
+colnames(zscore_bailey)=paste(colnames(zscore_bailey),"(Bailey et al. (2016))",sep=" ")
+colnames(zscore_col)=paste(colnames(zscore_col),"(Collison et al. (2011))",sep=" ")
+colnames(zscore_sc)=paste(colnames(zscore_sc),"(W. Hwang et al. (2022))",sep=" ")
+
+zscore_mof1=zscore_mof-min(zscore_mof)
+zscore_bailey1=zscore_bailey-min(zscore_bailey)
+zscore_col1=zscore_col-min(zscore_col)
+zscore_sc1=zscore_sc-min(zscore_sc)
+
+
+score_all=cbind(zscore_mof[which(rownames(zscore_mof)%in%lee1.ann$name),],zscore_bailey[which(rownames(zscore_bailey)%in%lee1.ann$name.1),],zscore_col[which(rownames(zscore_col)%in%lee1.ann$name.1),],zscore_sc[which(rownames(zscore_sc)%in%lee1.ann$name.1),],lee1.ann)
+
+df=data.frame(score_all[,c(1:16,20:23,25,32)],check.names=F)
+
+
+
+df$nmf_cluster=paste("NMF",df$nmf_cluster,sep="")
+
+#df1=merge(df,t(t1[-c(1:2)]),by=0)
+
+library(circlize)
+
+myColors=c("darkorange","purple","green","lightgrey","brown","darkorange","magenta", "cyan", "darkorange","pink","black","lightgreen","goldenrod4","lightslateblue","grey","aquamarine4","tan3","steelblue4", "lightcoral","olivedrab1","yellow3","slateblue")
+
+ha1 = HeatmapAnnotation(df=data.frame(score_all[,c(1:16,25,32)]),which='col',show_annotation_name = TRUE)
+set.seed(100)
+
+set.seed(100)
+
+df$Timepoint=gsub("Early","2-4 Month",df$Timepoint)
+df$Timepoint=gsub("Late","4-6 Month",df$Timepoint)
+
+
+
+rownames(s1)=make.names(s1$Gene.name,unique=T)
+
+scaled_tmm=as.data.frame(t(scale(t(s1[,-c(1:2)]), center = T, scale = T)));
+
+
+colnames(scaled_tmm)=gsub("[.]","-",colnames(scaled_tmm))
+
+
+  #genotype=score_all$Genotype,cluster=score_all$nmf_cluster,
+   #                     ADEX=score_all$ADEX,Immunogenic=score_all$Immunogenic,
+    #                    progenitor=score_all$Progenitor,squamous=score_all$Squamous,classical=score_all$classical,basal=score_all$BASAL.LIKE,
+     ##
+             #           time=score_all$Timepoint,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+
+#colnames(scaled_tmm)=gsub("batch1_","",colnames(scaled_tmm))
+#colnames(scaled_tmm)=gsub("batch2_","",colnames(scaled_tmm))
+scaled_tmm=scaled_tmm[,order(match(colnames(scaled_tmm),df1$Row.names))]
+heat1=scaled_tmm[which(colnames(scaled_tmm)%in%rownames(score_all))]
+
+match(colnames(heat1),rownames(score_all))
+match(colnames(heat1),rownames(df))
+
+df=read.table("~/Desktop/human_pdac_1007/qsb_1018/meta_nmf.txt",sep="\t",row.names=1,header=T,check.names=F)
+df=df[order(df$NMF_CLUSTER),]
+
+ha2 <- HeatmapAnnotation(  #nmf_cluster = df$nmf_cluster,
+  nmf_cluster = anno_block(gp = gpar(fill = c("orange","yellow2","dodgerblue2")), labels = c("NMF1","NMF2","NMF3")),
+  Timepoint = df$Timepoint,
+
+  genotype = df$Genotype,
+  QM.PDA = df$`QM.PDA (Collison et al. (2011))`,
+  Squamous = df$`Squamous (Bailey et al. (2016))`,
+  Basal = df$`BASAL.LIKE (Moffit et al. (2015))`,
+  Squamoid = df$`Squamoid (W. Hwang et al. (2022))`,
+  Classical = df$`Classical (Moffit et al. (2015))`,
+
+  ADEX = df$`ADEX (Bailey et al. (2016))`,
+  Immunogenic = df$`Immunogenic (Bailey et al. (2016))`,
+  Progenitor = df$`Progenitor (Bailey et al. (2016))`,
+
+
+
+  Classical.c = df$`Classical (Collison et al. (2011))`,
+  Exocrine.like = df$`Exocrine.like (Collison et al. (2011))`,
+
+
+  Acinar.like = df$`Acinar.like (W. Hwang et al. (2022))`,
+  Classical.like = df$`Classical.like (W. Hwang et al. (2022))`,
+  Basaloid = df$`Basaloid (W. Hwang et al. (2022))`,
+
+  Mesenchymal = df$`Mesenchymal (W. Hwang et al. (2022))`,
+  neuroendocine = df$`Neuroendocrine.like (W. Hwang et al. (2022))`,
+  neuroal.like.progenitor = df$`Neural.like.progenitor (W. Hwang et al. (2022))`,
+  # annotation_label = c(  "Timepoint",  "Genotype",colnames(df)[c(9,6,1,13)],colnames(df)[c(2:5,7:8,10:12,14:16)]),
+  annotation_label = c( "NMF_cluster", "Timepoint",  "Genotype",colnames(df)[c(9,6,1,13)],colnames(df)[c(2:5,7:8,10:12,14:16)]),
+
+  # Define color schemes
+  col = list(
+
+    Basal = colorRamp2(c(min(df$`BASAL.LIKE (Moffit et al. (2015))`), max(df$`BASAL.LIKE (Moffit et al. (2015))`)), c("white", "darkorange")),
+    Classical = colorRamp2(c(min(df$`Classical (Moffit et al. (2015))`), max(df$`Classical (Moffit et al. (2015))`)), c("white", "purple")),
+
+    ADEX = colorRamp2(c(min(df$`ADEX (Bailey et al. (2016))`), max(df$`ADEX (Bailey et al. (2016))`)), c("white", "green")),
+    Progenitor = colorRamp2(c(min(df$`Progenitor (Bailey et al. (2016))`), max(df$`Progenitor (Bailey et al. (2016))`)), c("white", "brown")),
+    Squamous = colorRamp2(c(min(df$`Squamous (Bailey et al. (2016))`), max(df$`Squamous (Bailey et al. (2016))`)), c("white", "darkorange")),
+    Immunogenic = colorRamp2(c(min(df$`Immunogenic (Bailey et al. (2016))`), max(df$`Immunogenic (Bailey et al. (2016))`)), c("white", "lightgrey")),
+
+    Classical.c = colorRamp2(c(min(df$`Classical (Collison et al. (2011))`), max(df$`Classical (Collison et al. (2011))`)), c("white", "magenta")),
+    Exocrine.like = colorRamp2(c(min(df$`Exocrine.like (Collison et al. (2011))`), max(df$`Exocrine.like (Collison et al. (2011))`)), c("white", "cyan")),
+    QM.PDA = colorRamp2(c(min(df$`QM.PDA (Collison et al. (2011))`), max(df$`QM.PDA (Collison et al. (2011))`)), c("white", "darkorange")),
+
+    Acinar.like = colorRamp2(c(min(df$`Acinar.like (W. Hwang et al. (2022))`), max(df$`Acinar.like (W. Hwang et al. (2022))`)), c("white", "yellow3")),
+    Classical.like = colorRamp2(c(min(df$`Classical.like (W. Hwang et al. (2022))`), max(df$`Classical.like (W. Hwang et al. (2022))`)), c("white", "green4")),
+    Basaloid = colorRamp2(c(min(df$`Basaloid (W. Hwang et al. (2022))`), max(df$`Basaloid (W. Hwang et al. (2022))`)), c("white", "lavender")),
+    Squamoid = colorRamp2(c(min(df$`Squamoid (W. Hwang et al. (2022))`), max(df$`Squamoid (W. Hwang et al. (2022))`)), c("white", "darkorange")),
+    Mesenchymal = colorRamp2(c(min(df$`Mesenchymal (W. Hwang et al. (2022))`), max(df$`Mesenchymal (W. Hwang et al. (2022))`)), c("white", "lavenderblush")),
+    neuroendocine = colorRamp2(c(min(df$`Neuroendocrine.like (W. Hwang et al. (2022))`), max(df$`Neuroendocrine.like (W. Hwang et al. (2022))`)), c("white", "turquoise")),
+    neuroal.like.progenitor = colorRamp2(c(min(df$`Neural.like.progenitor (W. Hwang et al. (2022))`), max(df$`Neural.like.progenitor (W. Hwang et al. (2022))`)), c("white", "yellow")),
+
+    Timepoint = c("2-4 Month " = "lightgreen", "4-6 Month " = "black"),
+    # nmf_cluster = c("NMF3" = "yellow3", "NMF2" = "orange", "NMF1" = "dodgerblue2", "NMF4" = "brown"),
+    genotype = c("PGRT" = "darkgreen", "KPC" = "blue") ),
+
+  # Define the annotation labels
+  annotation_name_gp = gpar(fontsize = 16),
+  height = unit(110, "mm"),
+  annotation_legend_param = list(
+    #nmf_cluster = list(nrow=1),
+    Timepoint=list(nrow=1),
+    genotype = list(nrow = 1),
+    QM.PDA = list(direction = "horizontal"),
+    Squamous = list(direction = "horizontal"),
+    Basal = list(direction = "horizontal"),
+    Squamoid = list(direction = "horizontal"),
+    Classical = list(direction = "horizontal"),
+
+    ADEX = list(direction = "horizontal"),
+    Immunogenic = list(direction = "horizontal"),
+    Progenitor = list(direction = "horizontal"),
+
+
+
+    Classical.c = list(direction = "horizontal"),
+    Exocrine.like = list(direction = "horizontal"),
+
+
+    Acinar.like = list(direction = "horizontal"),
+    Classical.like = list(direction = "horizontal"),
+    Basaloid = list(direction = "horizontal"),
+
+    Mesenchymal = list(direction = "horizontal"),
+    neuroendocine = list(direction = "horizontal"),
+    neuroal.like.progenitor = list(direction = "horizontal") ))
+
+nmf_lee_3 = estim.r.IR$fit$'3'
+nmf_result=nmf_lee_3
+consensus_matrix <- consensus(nmf_result)
+cor1=cor(consensus_matrix )
+colnames(cor1)=gsub("[.]","-",colnames(cor1))
+rownames(cor1)=gsub("[.]","-",rownames(cor1))
+match(colnames(cor1),rownames(df))
+
+# Perform hierarchical clustering on the consensus matrix
+hc_consensus <- hclust(as.dist(1 - consensus_matrix))  # 1 - consensus to convert to distance
+dend_consensus <- as.dendrogram(hc_consensus)
+
+
+W <- basis(nmf_lee_3)
+# Extract coefficient matrix (H): components x samples
+H <- coef(nmf_lee_3)
+reconstructed_matrix <- W %*% H
+# Inspect the reconstructed matrix
+head(reconstructed_matrix)
+
+colnames(reconstructed_matrix)=gsub("[.]","-",colnames(reconstructed_matrix))
+
+reconstructed_matrix.ann=merge(ann,reconstructed_matrix,by.x="Gene.stable.ID",by.y=0)
+write.table(reconstructed_matrix.ann,"~/Desktop/bottom_matrix.txt",sep="\t",quote=F,row.names=F)
+
+m11=data.frame(matrix(nrow = 0, ncol = ncol(reconstructed_matrix)))
+colnames(m11)=colnames(reconstructed_matrix)
+
+m11=m11[,order(match(colnames(m11),rownames(df)))]
+match(colnames(m11),rownames(df))
+
+
+colnames(reconstructed_matrix)=gsub("[.]","-",colnames(reconstructed_matrix))
+match(colnames(reconstructed_matrix),rownames(df))
+
+
+
+scale1=t(scale(t(reconstructed_matrix)))
+
+scale1=scale1[,order(match(colnames(scale1),rownames(df)))]
+match(colnames(scale1),rownames(df))
+
+colnames(m11)=df$rename
+cor2=data.frame(cor(reconstructed_matrix))
+colnames(cor2)=gsub("[.]","-",colnames(cor2))
+
+df=df[order(df$nmf_cluster),]
+
+cor2=cor2[order(match(colnames(cor2),rownames(df)))]
+cor2=cor2[order(match(rownames(cor2),rownames(df))),]
+match(colnames(cor2),rownames(df))
+match(rownames(cor2),rownames(df))
+
+colnames(cor2)=df$rename
+rownames(cor2)=df$rename
+
+scale1=t(scale(t(reconstructed_matrix)))
+colnames(scale1)=df$rename
+scale1.ann=merge(ann,scale1,by.x="Gene.stable.ID",by.y=0)
+
+write.table(scale1.ann[order(colnames(scale1.ann))],"bottom_z_score.txt",
+            sep="\t",quote=F,row.names=F)
+
+colnames(m11)=df$rename
+match(colnames(m11),df$rename)
+
+pdf("~/Desktop/top.annotation.pdf",15,10)
+
+p0a=Heatmap(m11, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),
+            column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,
+            column_dend_reorder=F,column_title=NULL,
+            ,show_row_names=T,show_column_names=T,column_gap=unit(1,"mm"),
+            column_split=df$NMF_CLUSTER,
+            show_column_dend =F,
+            show_row_dend =F,row_title=" ",column_order=colnames(m11) )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+dev.off()
+
+
+
+pdf("~/Desktop/top.annotation1.pdf",15,15)
+p0a=Heatmap(m11, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+            ,show_row_names=T,show_column_names=T,show_column_dend =F,show_row_dend =F,row_title=" " )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+p0a=Heatmap(m11, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+            ,show_row_names=T,show_column_names=T,column_split=df$nmf_cluster,show_column_dend =F,show_row_dend =F,row_title=" " )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+dev.off()
+
+
+
+
+
+
+
+
+pdf("~/Desktop/top.annotation1.pdf",15,15)
+p0a=Heatmap(m11, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+            ,show_row_names=T,show_column_names=T,show_column_dend =F,show_row_dend =F,row_title=" " )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+p0a=Heatmap(m11, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+            ,show_row_names=T,show_column_names=T,column_split=df$nmf_cluster,show_column_dend =F,show_row_dend =F,row_title=" " )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+dev.off()
+
+
+nmf_lee_3 = estim.r.IR$fit$'3'
+nmf_result=nmf_lee_3
+consensus_matrix <- consensus(nmf_result)
+cor1=cor(consensus_matrix )
+colnames(cor1)=gsub("[.]","-",colnames(cor1))
+rownames(cor1)=gsub("[.]","-",rownames(cor1))
+match(colnames(cor1),rownames(df))
+
+# Perform hierarchical clustering on the consensus matrix
+hc_consensus <- hclust(as.dist(1 - consensus_matrix))  # 1 - consensus to convert to distance
+dend_consensus <- as.dendrogram(hc_consensus)
+
+
+W <- basis(nmf_lee_3)
+# Extract coefficient matrix (H): components x samples
+H <- coef(nmf_lee_3)
+reconstructed_matrix <- W %*% H
+# Inspect the reconstructed matrix
+head(reconstructed_matrix)
+
+colnames(reconstructed_matrix)=gsub("[.]","-",colnames(reconstructed_matrix))
+
+reconstructed_matrix.ann=merge(ann,reconstructed_matrix,by.x="Gene.stable.ID",by.y=0)
+write.table(reconstructed_matrix.ann,"~/Desktop/bottom_matrix.txt",sep="\t",quote=F,row.names=F)
+
+m11=matrix(nrow = 0, ncol = ncol(reconstructed_matrix))
+
+colnames(reconstructed_matrix)=gsub("[.]","-",colnames(reconstructed_matrix))
+match(colnames(reconstructed_matrix),rownames(df))
+
+
+
+scale1=t(scale(t(reconstructed_matrix)))
+match(colnames(scale1),rownames(df))
+colnames(m11)=df$rename
+cor2=data.frame(cor(reconstructed_matrix))
+colnames(cor2)=gsub("[.]","-",colnames(cor2))
+
+df=df[order(df$nmf_cluster),]
+
+cor2=cor2[order(match(colnames(cor2),rownames(df)))]
+cor2=cor2[order(match(rownames(cor2),rownames(df))),]
+match(colnames(cor2),rownames(df))
+match(rownames(cor2),rownames(df))
+
+colnames(cor2)=df$rename
+rownames(cor2)=df$rename
+
+scale1=t(scale(t(reconstructed_matrix)))
+colnames(scale1)=df$rename
+scale1.ann=merge(ann,scale1,by.x="Gene.stable.ID",by.y=0)
+
+write.table(scale1.ann[order(colnames(scale1.ann))],"bottom_z_score.txt",
+            sep="\t",quote=F,row.names=F)
+
+
+#df$Timepoint=gsub("Early","2-4 Month",df$Timepoint)
+#df$Timepoint=gsub("Late","4-6 Month ",df$Timepoint)
+
+pdf("~/Desktop/bottom.annotation1.pdf",15,15)
+
+ha2a <- HeatmapAnnotation(
+  nmf_cluster = df$nmf_cluster,
+  Timepoint = df$Timepoint,
+
+  genotype = df$Genotype,
+  annotation_label = c( "NMF_cluster",  "Timepoint", "Genotype"),
+  # Define color schemes
+  col = list(
+
+    Timepoint = c("2-4 Month " = "lightgreen", "4-6 Month " = "black"),
+    nmf_cluster = c("NMF3" = "yellow3", "NMF2" = "orange", "NMF1" = "dodgerblue2", "NMF4" = "brown"),
+    genotype = c("PGRT" = "pink3", "KPC" = "pink") ),
+
+  # Define the annotation labels
+  annotation_name_gp = gpar(fontsize = 16),
+  height = unit(30, "mm")
+)
+
+match(colnames(cor2),df$rename)
+match(rownames(cor2),df$rename)
+
+
+p0a=Heatmap(cor2, top_annotation = ha2a,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),
+            row_dend_reorder=T,column_dend_reorder=F,column_order=colnames(cor2),
+            ,show_row_names=T,show_column_names=T,show_column_dend =F,
+            show_row_dend =F,row_title=" " )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+colnames(scale1)=df$rename
+p0a=Heatmap(scale1, top_annotation = ha2a,column_order=colnames(cor2),row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),
+            row_dend_reorder=T,column_dend_reorder=F,
+            ,show_row_names=F,show_column_names=T,
+            show_column_dend =F,show_row_dend =F,row_title=" ",cluster_columns = dend_consensus )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+dev.off()
+
+
+
+
+
+
+ha2a <- HeatmapAnnotation(
+
+  Timepoint = df$Timepoint,
+  nmf_cluster = df$nmf_cluster,
+  genotype = df$Genotype,
+  annotation_label = c(  "Timepoint", "NMF_cluster", "Genotype"),
+  # Define color schemes
+  col = list(
+
+
+    Timepoint = c("2-4 Month" = "lightgreen", "4-6 Month" = "black"),
+    nmf_cluster = c("NMF3" = "yellow3", "NMF2" = "orange", "NMF1" = "dodgerblue2", "NMF4" = "brown"),
+    genotype = c("PGRT" = "pink3", "KPC" = "pink") ),
+
+  # Define the annotation labels
+  annotation_name_gp = gpar(fontsize = 16),
+  height = unit(30, "mm")
+)
+
+p0a=Heatmap(cor2, top_annotation = ha2a,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+            ,show_row_names=T,show_column_names=T,show_column_dend =F,show_row_dend =F,row_title=" " )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+colnames(scale1)=df$rename
+p0a=Heatmap(scale1, top_annotation = ha2a,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+            ,show_row_names=F,show_column_names=T,show_column_dend =F,show_row_dend =F,row_title=" ",cluster_columns = dend_consensus )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+dev.off()
+
+
+p0a=Heatmap(matrix(nrow = 0, ncol = ncol(cor1)), top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+            ,show_row_names=T,show_column_names=T,column_split=df$nmf_cluster,show_column_dend =F,show_row_dend =F,row_title=" " )
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+dev.off()
+
+
+
+
+pdf("top1000.pdf",15,30)
+heat1=heat1[which(rowSums(heat1)>0),]
+Heatmap(heat1,top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+        ,show_row_names=T,show_column_names=T,cluster_columns = dend_consensus,show_column_dend =F,show_row_dend =F,row_title=" " )
+
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+Heatmap(heat1,top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+        ,show_row_names=T,show_column_names=T,column_split=df$nmf_cluster,show_column_dend =F,show_row_dend =F,row_title=" " )
+
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+     dev.off()
+
+
+pdf("~/Desktop/lee_nmf.cpm.qua0.pdf",15,15)
+
+heat.dup=heat1
+colnames(heat.dup)=score_all$rename
+
+rows_no_na <- complete.cases(heat.dup)
+
+heat.dup=heat.dup[rows_no_na,]
+cor1=cor(heat.dup)
+
+p0a=Heatmap(cor1, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),column_dend_reorder=F,
+           show_row_names=T,show_column_names=T,show_row_dend =F,row_title=" ",row_dend_reorder=T )
+
+p0=Heatmap(cor1, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),row_dend_reorder=T,column_dend_reorder=F,
+          ,show_row_names=T,show_column_names=T,column_split=df$nmf_cluster,show_row_dend =F,row_title=" ")
+
+p0b=Heatmap(cor1, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),
+           show_row_names=T,show_column_names=T,column_split=df$Timepoint,show_row_dend =F,row_title=" ",row_dend_reorder=T,column_dend_reorder=F)
+
+
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+draw(p0, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+draw(p0b, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+dev.off()
+
+
+
+pdf("~/Desktop/lee_nmf.cpm.marker.gene.pdf",15,25)
+
+gene_qsb1=rownames(heat.dup)[rownames(heat.dup)%in%gene_qsb]
+row_labels <- ifelse(rownames(heat.dup) %in% gene_qsb1, rownames(heat.dup), "")
+
+
+selected_indices <- which(rownames(heat.dup) %in% gene_qsb1)
+
+# Create row annotation with anno_mark for the selected genes
+row_ha <- rowAnnotation(foo = anno_mark(at = selected_indices,
+                                        labels = rownames(heat.dup)[selected_indices],
+                                        labels_gp = gpar(fontsize = 8)))
+
+
+#row_ha1 = rowAnnotation(foo = anno_mark(at = selected, labels = rownames(heat.dup)[selected],labels_gp = gpar(fontsize = 8)))
+
+p0a <- Heatmap(
+  heat.dup,
+  top_annotation = ha2,
+  row_names_gp = gpar(fontsize = 12),
+  column_names_gp = gpar(fontsize = 12),
+  show_row_names = TRUE,
+  show_column_names = TRUE,
+  show_row_dend = TRUE,
+  row_title = " ",
+  row_dend_reorder = TRUE,
+  row_km = 3,
+  column_split = df$nmf_cluster,
+  row_labels = row_labels  # Assign the row_labels vector directly here
+)
+
+draw(p0a,
+     padding = unit(c(30, 10, 10, 40), "mm"),
+     heatmap_legend_side = "bottom",
+     annotation_legend_side = "bottom",
+     legend_grouping = "adjusted",
+     merge_legend = TRUE
+)
+
+
+p0a <- Heatmap(
+  heat.dup,
+  top_annotation = ha2,  # Assuming you have ha2 as your top annotation
+  row_names_gp = gpar(fontsize = 12),
+  column_names_gp = gpar(fontsize = 12),
+  show_row_names = FALSE,  # You can hide the regular row names if you just want the marks
+  show_column_names = TRUE,
+  show_row_dend = TRUE,
+  row_title = " ",
+  row_dend_reorder = TRUE,
+  row_km = 3,
+  column_split = df$nmf_cluster,  # Assuming df$nmf_cluster exists
+  right_annotation = row_ha  # Add the row annotation with anno_mark
+)
+
+# Draw the heatmap
+draw(p0a,
+     padding = unit(c(30, 10, 10, 40), "mm"),
+     heatmap_legend_side = "bottom",
+     annotation_legend_side = "bottom",
+     legend_grouping = "adjusted",
+     merge_legend = TRUE
+)
+
+dev.off()
+
+set.seed(100)
+pdf("~/Desktop/lee_nmf.cpm.marker.gene.label.pdf",20,20)
+gene_qsb1=rownames(heat.dup)[rownames(heat.dup)%in%gene_qsb]
+row_labels <- ifelse(rownames(heat.dup) %in% gene_qsb1, rownames(heat.dup), "")
+
+
+selected_indices <- which(rownames(heat.dup) %in% gene_qsb1)
+
+# Create row annotation with anno_mark for the selected genes
+row_ha <- rowAnnotation(foo = anno_mark(at = selected_indices,
+                                        labels = rownames(heat.dup)[selected_indices],
+                                        labels_gp = gpar(fontsize = 8)))
+
+
+#row_ha1 = rowAnnotation(foo = anno_mark(at = selected, labels = rownames(heat.dup)[selected],labels_gp = gpar(fontsize = 8)))
+
+p0a <- Heatmap(
+  heat.dup,
+  top_annotation = ha2,
+  row_names_gp = gpar(fontsize = 12),
+  column_names_gp = gpar(fontsize = 12),
+  show_row_names = TRUE,
+  show_column_names = TRUE,
+  show_row_dend = TRUE,
+  row_title = " ",
+  row_dend_reorder = TRUE,
+  row_km = 3,
+  cluster_columns = dend_consensus,
+  row_labels = row_labels  # Assign the row_labels vector directly here
+)
+
+row_clusters <- row_order(p0a)
+
+# View the cluster assignments (indices of rows in each cluster)
+print(row_clusters)
+# Initialize a list to store row labels per cluster
+row_labels_per_cluster <- list()
+
+# Loop through each cluster and extract the corresponding row labels
+for (i in seq_along(row_clusters)) {
+  # Get the row indices for the current cluster
+  cluster_indices <- row_clusters[[i]]
+
+  # Get the corresponding row labels for the current cluster
+  row_labels_per_cluster[[i]] <- row_labels[cluster_indices]
+}
+
+# View the row labels for each cluster
+print(row_labels_per_cluster)
+
+non_na_counts_per_cluster <- list()
+
+# Loop through each row_km cluster
+for (i in seq_along(row_clusters)) {
+  # Get the row indices for the current cluster
+  cluster_indices <- row_clusters[[i]]
+
+  # Extract the rows from the original matrix corresponding to the current cluster
+  cluster_rows <- heat.dup[cluster_indices, ]
+
+  # Count non-NA values per row and sum it up for the cluster
+  non_na_counts_per_cluster[[i]] <- apply(cluster_rows, 1, function(row) sum(!is.na(row)))
+}
+
+# Print the non-NA counts for each cluster
+for (i in seq_along(non_na_counts_per_cluster)) {
+  cat("Cluster", i, "has the following non-NA counts per row:\n")
+  print(non_na_counts_per_cluster[[i]])
+  cat("Total non-NA items in Cluster", i, ":", sum(non_na_counts_per_cluster[[i]]), "\n\n")
+}
+
+
+HM1=draw(p0a)
+row_clusters <- row_order(HM1)  # Returns a list of indices for each cluster
+
+# Get the row indices for the first k-means cluster
+first_cluster_indices <- row_clusters[[1]]
+####################
+genes_of_interest=c(rownames(heat.dup)[rownames(heat.dup)%in%gene_qsb])
+selected_indices <- which(rownames(heat.dup)[first_cluster_indices] %in% genes_of_interest)
+
+#ha = rowAnnotation(foo = anno_mark(at = which(rownames(smallx) %in% selected$GeneID),labels = rownames(smallx)[rownames(smallx)%in%selected$GeneID]))
+# Find the positions of the genes of interest within the entire heatmap
+selected_global_indices <- first_cluster_indices[selected_indices][1:30]
+
+# Create the row annotation with anno_mark for the genes of interest in the first cluster
+row_ha <- rowAnnotation(foo = anno_mark(at = selected_global_indices,
+                                        labels = rownames(heat.dup)[selected_global_indices],
+                                        labels_gp = gpar(fontsize = 12)))
+#row_ha1 = rowAnnotation(foo = anno_mark(at = selected, labels = rownames(heat.dup)[selected],labels_gp = gpar(fontsize = 8)))
+
+x1=Heatmap(heat.dup, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),
+        show_row_names=F,show_column_names=T,show_row_dend =T,row_title=" ",row_dend_reorder=T ,row_km=3,column_split=df$nmf_cluster,right_annotation  = row_ha)
+
+draw(x1, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+ legend_grouping = "adjusted",merge_legend=T)
+
+x1=Heatmap(heat.dup, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),cluster_columns = dend_consensus,
+
+           row_km=3,show_row_names=F,show_column_names=T,show_row_dend =T,row_title=" ",row_dend_reorder=T ,right_annotation  = row_ha)
+
+draw(x1, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+labels=c("220 QSB marker genes/687 genes","25 QSB marker genes/493 genes","39 QSB marker genes/381 genes")
+x1=Heatmap(heat.dup, top_annotation = ha2,row_names_gp = gpar(fontsize = 16),column_names_gp = gpar(fontsize = 12),cluster_columns = dend_consensus,
+
+           row_km=3,show_row_names=F,show_column_names=T,show_row_dend =F,row_dend_reorder=T,row_title  = labels )
+
+draw(x1, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+x1=Heatmap(heat.dup, top_annotation = ha2,row_names_gp = gpar(fontsize = 16),column_names_gp = gpar(fontsize = 12),
+
+           row_km=3,show_row_names=F,show_column_names=T,show_row_dend =F,row_dend_reorder=T,row_title  = labels ,column_split=df$nmf_cluster)
+
+draw(x1, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+dev.off()
+
+
+
+#p0=Heatmap(heat.dup, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),
+   #        ,show_row_names=F,show_column_names=T,column_split=df$nmf_cluster,show_row_dend =F,row_title=" ",row_dend_reorder=T)
+
+#p0b=Heatmap(heat.dup, top_annotation = ha2,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),
+     #       show_row_names=F,show_column_names=T,column_split=df$Timepoint,show_row_dend =F,row_title=" ",row_dend_reorder=T)
+
+
+
+
+#draw(p0, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+ #    legend_grouping = "adjusted",merge_legend=T)
+
+
+#################################
+
+  input1=read.table("~/Desktop/nmf_input.w.ercc.noqu.txt",sep="\t",header=T,row.names=1,check.names=F)
+colnames(input1)=gsub("[.]","-",colnames(input1))
+heat1=input1[which(colnames(input1)%in%rownames(score_all))]
+
+match(colnames(heat1),rownames(score_all))
+match(colnames(heat1),rownames(df))
+
+pdf("~/Desktop/lee_nmf.cpm.qua.hvg.9302.pdf",15,15)
+colnames(heat1)=score_all$rename
+cor1=cor(heat1)
+
+
+nmf_lee_3 = estim.r.IR$fit$'3'
+nmf_result=nmf_lee_3
+consensus_matrix <- consensus(nmf_result)
+
+# Perform hierarchical clustering on the consensus matrix
+hc_consensus <- hclust(as.dist(1 - consensus_matrix))  # 1 - consensus to convert to distance
+dend_consensus <- as.dendrogram(hc_consensus)
+
+# Plot consensus dendrogram to check
+
+nmf_result=nmf_lee_3
+consensus_matrix <- consensus(nmf_result)
+
+# Perform hierarchical clustering on the consensus matrix
+hc_consensus <- hclust(as.dist(1 - consensus_matrix))  # 1 - consensus to convert to distance
+dend_consensus <- as.dendrogram(hc_consensus)
+
+# Plot consensus dendrogram to check
+#plot(dend_consensus)
+pdf("~/Desktop/lee_nmf.cpm.qua.hvg.9302.pdf",15,15)
+colnames(consensus_matrix)=gsub("[.]","-",colnames(consensus_matrix))
+match(colnames(consensus_matrix),rownames(score_all))
+match(colnames(consensus_matrix),rownames(df))
+colnames(consensus_matrix)=score_all$rename
+# Create heatmap using consensus dendrogram in ComplexHeatmap
+p0a=Heatmap(consensus_matrix, top_annotation = ha2,
+        cluster_columns = dend_consensus,
+        cluster_rows = dend_consensus,
+        show_row_dend = TRUE,
+        show_column_dend = TRUE,
+        name = "Consensus Heatmap")
+
+draw(p0a, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend=T)
+
+dev.off()
+
+
+
+colnames(log_H)=gsub("[.]","-",colnames(log_H))
+heat1=log_H[which(colnames(log_H)%in%rownames(score_all))]
+
+match(colnames(heat1),rownames(score_all))
+match(colnames(heat1),rownames(df))
+
+
+
+
+######
+
+pdf("~/Desktop/nmf.tmp.pdf",10,20)
+set.seed(10)
+p=Heatmap(heat1, top_annotation = ha1,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12),
+          row_km=4,show_row_names=F,show_column_names=F)
+
+draw(p, padding = unit(c(10, 10, 40, 20), "mm"),heatmap_legend_side="bottom", annotation_legend_side="bottom",
+     legend_grouping = "adjusted",merge_legend = TRUE)
+
+
+dev.off()
+
+
+
+rownames(score_all)=gsub("batch1_","",rownames(score_all))
+rownames(score_all)=gsub("batch2_","",rownames(score_all))
+
+rownames(score_all)=gsub("batch1_","",rownames(score_all))
+rownames(score_all)=gsub("batch2_","",rownames(score_all))
+
+#ha1 = HeatmapAnnotation(group=lee1.ann$group3,cluster=lee1.ann.ann2$nmf_cluster,Neuroendocrine.like=lee1.ann.ann2$Neuroendocrine.like,Neural.like.progenitor=lee1.ann.ann2$Neural.like.progenitor,squamoid=lee1.ann.ann2$Squamoid,mesenchymal=lee1.ann.ann2$Mesenchymal,classical.like=lee1.ann.ann2$Classical.like,Basaloid=lee1.ann.ann2$Basaloid,time=lee1.ann.ann2$Timepoint,emt=lee1.ann.ann2$emt,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+rownames(heat1)=gsub("batch1_","",rownames(heat1))
+rownames(heat1)=gsub("batch2_","",rownames(heat1))
+
+colnames(heat1)=gsub("batch1_","",colnames(heat1))
+colnames(heat1)=gsub("batch2_","",colnames(heat1))
+
+
+
+
+
+
+
+
+library(reshape2)
+####twist1
+
+
+
+#########################bailey
+
+ann=read.table("~/Desktop/annotation/mouse_104.txt",sep="\t",header=T)
+
+#prepping with baileys
+marker5=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/PDAC_subtype_ref_db/Bailey/Bailey_readable_list.tsv",sep="\t",header=F)
+bailey_uniq=marker5[which(marker5$V2!="not unique"),]
+
+marker4=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/PDAC_subtype_ref_db/PDAC Gene List.txt",sep="\t",header=T)
+
+
+tpm12.ann=merge(ann,counts_batch_corrected0,by.x="Gene.stable.ID",by.y=0)
+
+homolog=read.table("~/Desktop/annotation/mouse_human_homolog.txt",sep="\t",header=T)
+
+
+
+bailey.homo=merge(unique(homolog[,4:5]),bailey_uniq,by.x="Gene.name",by.y="V1")
+bailey.homo1=unique(bailey.homo[which(bailey.homo$Mouse.gene.name!=""),-c(1)])
+tpm12.ann1=merge(unique(tpm12.ann[,-1]),bailey.homo1,by.x="Gene.name",by.y="Mouse.gene.name")
+
+
+rownames(tpm12.ann1)=make.names(tpm12.ann1$Gene.name,unique=T)
+
+
+scaled_tmm=as.data.frame(t(scale(t(tpm12.ann1[,-c(1,ncol(tpm12.ann1))]), center = T, scale = T)));
+
+
+scaled_tmm1=merge(scaled_tmm,tpm12.ann1[,c(1,ncol(tpm12.ann1))],by=0)
+
+rownames(scaled_tmm1)=scaled_tmm1$Row.names
+
+
+#melt_hold= melt(hold)
+aggregated_by_subtypes_bailey=data.frame(aggregate(scaled_tmm1[2:(ncol(scaled_tmm1)-2)], FUN=mean, by=unique(list(scaled_tmm1$V2))))
+#aggregated_by_subtypes_bailey$V2=NULL
+#write.table(aggregated_by_subtypes_bailey, file =  "aggregated_scrna_subtypes.txt", row.names = F)
+
+rownames(aggregated_by_subtypes_bailey)=aggregated_by_subtypes_bailey$Group.1
+set.seed(100)
+
+t1=data.frame(t(aggregated_by_subtypes_bailey[-1]))
+rownames(t1)=gsub("[.]","-",rownames(t1))
+write.table(t1,"~/Desktop/zscore_bailey.txt",sep="\t",quote=F)
+
+#vsd normalized counts
+norm_countsf = "/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/vsd.txt"
+count_correct1=read.table(norm_countsf,header=T,sep="\t",row.names=1)
+
+
+####normalized count
+
+
+
+
+tg=data.frame(count_correct1[grep("ENSMUSG00000035799",rownames(count_correct1)),])
+tg=t(tg)
+colnames(tg)="Twist1"
+rownames(tg)=gsub("[.]","-",rownames(tg))
+
+
+lee3=merge(tg,lee1.ann,by.x=0,by.y="name")
+lee3$Timepoint=gsub("not_available","morbid",lee3$Timepoint)
+
+lee3.ann=merge(t1,lee3,by.x=0,by.y="Row.names")
+bailey=lee3.ann
+
+pdf("~/Desktop/lee_bailey.pdf",15,10)
+ha1 = HeatmapAnnotation(group=lee3.ann$group3,cluster=lee3.ann$nmf_cluster,
+                        ADEX=lee3.ann$ADEX,Immunogenic=lee3.ann$Immunogenic,
+                        progenitor=lee3.ann$Progenitor,squamous=lee3.ann$Squamous,
+                        time=lee3.ann$Timepoint,twist=lee3.ann$Twist1,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+
+#ha1 = HeatmapAnnotation(group=lee1.ann$group3,cluster=lee1.ann.ann2$nmf_cluster,Neuroendocrine.like=lee1.ann.ann2$Neuroendocrine.like,Neural.like.progenitor=lee1.ann.ann2$Neural.like.progenitor,squamoid=lee1.ann.ann2$Squamoid,mesenchymal=lee1.ann.ann2$Mesenchymal,classical.like=lee1.ann.ann2$Classical.like,Basaloid=lee1.ann.ann2$Basaloid,time=lee1.ann.ann2$Timepoint,emt=lee1.ann.ann2$emt,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+rownames(heat1)=gsub("batch1_","",rownames(heat1))
+rownames(heat1)=gsub("batch2_","",rownames(heat1))
+
+colnames(heat1)=gsub("batch1_","",colnames(heat1))
+colnames(heat1)=gsub("batch2_","",colnames(heat1))
+p=Heatmap(heat1, top_annotation = ha1,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12))
+
+draw(p, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="left", annotation_legend_side="left",
+     legend_grouping = "adjusted")
+
+dev.off()
+
+############sc
+
+#prepping with baileys
+marker5=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/PDAC_subtype_ref_db/Bailey/Bailey_readable_list.tsv",sep="\t",header=F)
+bailey_uniq=marker5[which(marker5$V2!="not unique"),]
+
+marker4=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/PDAC_subtype_ref_db/PDAC Gene List.txt",sep="\t",header=T)
+
+marker4m=melt(as.matrix(marker4))
+#vsd normalized counts
+norm_countsf = "/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/vsd.txt"
+count_correct1=read.table(norm_countsf,header=T,sep="\t",row.names=1)
+
+tg=data.frame(count_correct1[grep("ENSMUSG00000035799",rownames(count_correct1)),])
+tg=t(tg)
+colnames(tg)="Twist1"
+rownames(tg)=gsub("[.]","-",rownames(tg))
+
+counts_batch_corrected0=read.table(norm_countsf,sep="\t",header=T, as.is = T)
+library(reshape2)
+
+
+set1=readRDS("/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/set1.rds")
+
+###with W_1 in it for DE analysis
+new_meta=data.frame(pData(set1))
+
+count_correct1 <- set1@assayData$normalizedCounts
+
+count_correct1m=sweep(count_correct1,2,colSums(count_correct1),`/`)*10^6
+
+
+tpm12.ann=merge(ann,count_correct1m,by.x="Gene.stable.ID",by.y=0)
+
+
+#tpm12.ann=merge(ann,counts_batch_corrected0,by.x="Gene.stable.ID",by.y=0)
+
+homolog=read.table("~/Desktop/annotation/mouse_human_homolog.txt",sep="\t",header=T)
+
+
+
+bailey.homo=merge(unique(homolog[,4:5]),marker4m,by.x="Gene.name",by.y="value")
+bailey.homo1=unique(bailey.homo[which(bailey.homo$Mouse.gene.name!=""),-c(1,3)])
+tpm12.ann1=merge(unique(tpm12.ann[,-1]),bailey.homo1,by.x="Gene.name",by.y="Mouse.gene.name")
+
+
+rownames(tpm12.ann1)=make.names(tpm12.ann1$Gene.name,unique=T)
+
+
+scaled_tmm=as.data.frame(t(scale(t(tpm12.ann1[,-c(1,ncol(tpm12.ann1))]), center = T, scale = T)));
+
+
+scaled_tmm1=merge(scaled_tmm,tpm12.ann1[,c(1,ncol(tpm12.ann1))],by=0)
+
+rownames(scaled_tmm1)=scaled_tmm1$Row.names
+
+
+#melt_hold= melt(hold)
+aggregated_by_subtypes_bailey=data.frame(aggregate(scaled_tmm1[2:(ncol(scaled_tmm1)-2)], FUN=mean, by=unique(list(scaled_tmm1$Var2))))
+#aggregated_by_subtypes_bailey$V2=NULL
+#write.table(aggregated_by_subtypes_bailey, file =  "aggregated_scrna_subtypes.txt", row.names = F)
+
+rownames(aggregated_by_subtypes_bailey)=aggregated_by_subtypes_bailey$Group.1
+set.seed(100)
+
+t1=data.frame(t(aggregated_by_subtypes_bailey[-1]))
+rownames(t1)=gsub("[.]","-",rownames(t1))
+write.table(t1,"zscore_sc.txt",sep="\t",quote=F)
+
+#vsd normalized counts
+norm_countsf = "/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/vsd.txt"
+count_correct1=read.table(norm_countsf,header=T,sep="\t",row.names=1)
+
+tg=data.frame(count_correct1[grep("ENSMUSG00000035799",rownames(count_correct1)),])
+tg=t(tg)
+colnames(tg)="Twist1"
+rownames(tg)=gsub("[.]","-",rownames(tg))
+
+
+lee3=merge(tg,lee1.ann,by.x=0,by.y="name")
+lee3$Timepoint=gsub("not_available","morbid",lee3$Timepoint)
+
+lee3.ann=merge(t1,lee3,by.x=0,by.y="Row.names")
+sc=lee3.ann
+
+pdf("~/Desktop/lee_scrna.pdf",15,10)
+#ha1 = HeatmapAnnotation(group=lee1.ann$group3,cluster=lee1.ann.ann2$nmf_cluster,ADEX=lee1.ann.ann2$ADEX,Immunogenic=lee1.ann.ann2$Immunogenic,progenitor=lee1.ann.ann2$Progenitor,squamous=lee1.ann.ann2$Squamous,time=lee1.ann.ann2$Timepoint,emt=lee1.ann.ann2$emt,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+
+ha1 = HeatmapAnnotation(group=lee3.ann$group3,cluster=lee3.ann$nmf_cluster,Neuroendocrine.like=lee3.ann$Neuroendocrine.like,Neural.like.progenitor=lee3.ann$Neural.like.progenitor,squamoid=lee3.ann$Squamoid,mesenchymal=lee3.ann$Mesenchymal,classical.like=lee3.ann$Classical.like,Basaloid=lee3.ann$Basaloid,time=lee3.ann$Timepoint,twist=lee3.ann$Twist1,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+
+rownames(heat1)=gsub("batch1_","",rownames(heat1))
+rownames(heat1)=gsub("batch2_","",rownames(heat1))
+
+colnames(heat1)=gsub("batch1_","",colnames(heat1))
+colnames(heat1)=gsub("batch2_","",colnames(heat1))
+
+p=Heatmap(heat1, top_annotation = ha1,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12))
+
+draw(p, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="left", annotation_legend_side="left",
+     legend_grouping = "adjusted")
+
+dev.off()
+
+############# collison
+
+
+
+marker4=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/PDAC_subtype_ref_db/collisson/collisson_marker.txt",sep="\t",header=F)
+
+
+#vsd normalized counts
+norm_countsf = "/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/vsd.txt"
+count_correct1=read.table(norm_countsf,header=T,sep="\t",row.names=1)
+
+tg=data.frame(count_correct1[grep("ENSMUSG00000035799",rownames(count_correct1)),])
+tg=t(tg)
+colnames(tg)="Twist1"
+rownames(tg)=gsub("[.]","-",rownames(tg))
+
+counts_batch_corrected0=read.table(norm_countsf,sep="\t",header=T, as.is = T)
+library(reshape2)
+
+
+tpm12.ann=merge(ann,counts_batch_corrected0,by.x="Gene.stable.ID",by.y=0)
+
+homolog=read.table("~/Desktop/annotation/mouse_human_homolog.txt",sep="\t",header=T)
+
+
+
+bailey.homo=merge(unique(homolog[,4:5]),marker4,by.x="Gene.name",by.y="V1")
+bailey.homo1=data.frame(unique(bailey.homo[which(bailey.homo$Mouse.gene.name!=""),-c(1)]))
+tpm12.ann1=merge(unique(tpm12.ann[,-1]),bailey.homo1,by.x="Gene.name",by.y="Mouse.gene.name")
+
+
+rownames(tpm12.ann1)=make.names(tpm12.ann1$Gene.name,unique=T)
+
+
+scaled_tmm=as.data.frame(t(scale(t(tpm12.ann1[,-c(1,ncol(tpm12.ann1))]), center = T, scale = T)));
+
+
+scaled_tmm1=merge(scaled_tmm,tpm12.ann1[,c(1,ncol(tpm12.ann1))],by=0)
+
+rownames(scaled_tmm1)=scaled_tmm1$Row.names
+
+
+#melt_hold= melt(hold)
+aggregated_by_subtypes_bailey=data.frame(aggregate(scaled_tmm1[2:(ncol(scaled_tmm1)-2)], FUN=mean, by=unique(list(scaled_tmm1$V2))))
+#aggregated_by_subtypes_bailey$V2=NULL
+#write.table(aggregated_by_subtypes_bailey, file =  "aggregated_scrna_subtypes.txt", row.names = F)
+
+rownames(aggregated_by_subtypes_bailey)=aggregated_by_subtypes_bailey$Group.1
+set.seed(100)
+
+t1=data.frame(t(aggregated_by_subtypes_bailey[-1]))
+rownames(t1)=gsub("[.]","-",rownames(t1))
+
+write.table(t1,"zscore_collison.txt",sep="\t",quote=F)
+#vsd normalized counts
+norm_countsf = "/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/vsd.txt"
+count_correct1=read.table(norm_countsf,header=T,sep="\t",row.names=1)
+
+tg=data.frame(count_correct1[grep("ENSMUSG00000035799",rownames(count_correct1)),])
+tg=t(tg)
+colnames(tg)="Twist1"
+rownames(tg)=gsub("[.]","-",rownames(tg))
+
+
+lee3=merge(tg,lee1.ann,by.x=0,by.y="name")
+lee3$Timepoint=gsub("not_available","morbid",lee3$Timepoint)
+
+lee3.ann=merge(t1,lee3,by.x=0,by.y="Row.names")
+
+collison=lee3.ann
+
+pdf("~/Desktop/lee_collison.pdf",15,10)
+#ha1 = HeatmapAnnotation(group=lee1.ann$group3,cluster=lee1.ann.ann2$nmf_cluster,ADEX=lee1.ann.ann2$ADEX,Immunogenic=lee1.ann.ann2$Immunogenic,progenitor=lee1.ann.ann2$Progenitor,squamous=lee1.ann.ann2$Squamous,time=lee1.ann.ann2$Timepoint,emt=lee1.ann.ann2$emt,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+rownames(heat1)=gsub("batch1_","",rownames(heat1))
+rownames(heat1)=gsub("batch2_","",rownames(heat1))
+
+colnames(heat1)=gsub("batch1_","",colnames(heat1))
+colnames(heat1)=gsub("batch2_","",colnames(heat1))
+ha1 = HeatmapAnnotation(group=lee3.ann$group3,cluster=lee3.ann$nmf_cluster,classical=lee3.ann$classical,exocrine=lee3.ann$exocrine.like,QM=lee3.ann$QM.PDA,time=lee3.ann$Timepoint,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+
+p=Heatmap(heat1, top_annotation = ha1,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12))
+
+draw(p, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="left", annotation_legend_side="left",
+     legend_grouping = "adjusted")
+
+dev.off()
+
+
+############# moffit
+
+
+
+marker4=read.delim("/Users/ysong/Desktop/P_Tran_ref/pdac_background/PDAC_subtype_ref_db/Moffit_2015/motiffit.marker.txt",sep="\t",header=F)
+
+
+#vsd normalized counts
+norm_countsf = "/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/vsd.txt"
+count_correct1=read.table(norm_countsf,header=T,sep="\t",row.names=1)
+
+tg=data.frame(count_correct1[grep("ENSMUSG00000035799",rownames(count_correct1)),])
+tg=t(tg)
+colnames(tg)="Twist1"
+rownames(tg)=gsub("[.]","-",rownames(tg))
+
+counts_batch_corrected0=read.table(norm_countsf,sep="\t",header=T, as.is = T)
+library(reshape2)
+
+
+tpm12.ann=merge(ann,counts_batch_corrected0,by.x="Gene.stable.ID",by.y=0)
+
+homolog=read.table("~/Desktop/annotation/mouse_human_homolog.txt",sep="\t",header=T)
+
+
+
+bailey.homo=merge(unique(homolog[,4:5]),marker4,by.x="Gene.name",by.y="V1")
+bailey.homo1=data.frame(unique(bailey.homo[which(bailey.homo$Mouse.gene.name!=""),-c(1)]))
+tpm12.ann1=merge(unique(tpm12.ann[,-1]),bailey.homo1,by.x="Gene.name",by.y="Mouse.gene.name")
+
+
+rownames(tpm12.ann1)=make.names(tpm12.ann1$Gene.name,unique=T)
+
+
+scaled_tmm=as.data.frame(t(scale(t(tpm12.ann1[,-c(1,ncol(tpm12.ann1))]), center = T, scale = T)));
+
+
+scaled_tmm1=merge(scaled_tmm,tpm12.ann1[,c(1,ncol(tpm12.ann1))],by=0)
+
+rownames(scaled_tmm1)=scaled_tmm1$Row.names
+
+
+#melt_hold= melt(hold)
+aggregated_by_subtypes_bailey=data.frame(aggregate(scaled_tmm1[2:(ncol(scaled_tmm1)-2)], FUN=mean, by=unique(list(scaled_tmm1$V2))))
+#aggregated_by_subtypes_bailey$V2=NULL
+#write.table(aggregated_by_subtypes_bailey, file =  "aggregated_scrna_subtypes.txt", row.names = F)
+
+rownames(aggregated_by_subtypes_bailey)=aggregated_by_subtypes_bailey$Group.1
+set.seed(100)
+
+t1=data.frame(t(aggregated_by_subtypes_bailey[-1]))
+rownames(t1)=gsub("[.]","-",rownames(t1))
+
+write.table(t1,"zscore_moffit.txt",sep="\t",quote=F)
+
+
+#vsd normalized counts
+norm_countsf = "/Users/ysong/Desktop/P_Tran_ref/analysis_2024/ajmal_rnaseq/batch_correct/combat_seq_result/new_premorbid_morbid/vsd.txt"
+count_correct1=read.table(norm_countsf,header=T,sep="\t",row.names=1)
+
+tg=data.frame(count_correct1[grep("ENSMUSG00000035799",rownames(count_correct1)),])
+tg=t(tg)
+colnames(tg)="Twist1"
+rownames(tg)=gsub("[.]","-",rownames(tg))
+
+
+lee3=merge(tg,lee1.ann,by.x=0,by.y="name")
+lee3$Timepoint=gsub("not_available","morbid",lee3$Timepoint)
+
+lee3.ann=merge(t1,lee3,by.x=0,by.y="Row.names")
+
+moffit=lee3.ann
+
+pdf("~/Desktop/lee_moffit.pdf",20,10)
+#ha1 = HeatmapAnnotation(group=lee1.ann$group3,cluster=lee1.ann.ann2$nmf_cluster,ADEX=lee1.ann.ann2$ADEX,Immunogenic=lee1.ann.ann2$Immunogenic,progenitor=lee1.ann.ann2$Progenitor,squamous=lee1.ann.ann2$Squamous,time=lee1.ann.ann2$Timepoint,emt=lee1.ann.ann2$emt,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+rownames(heat1)=gsub("batch1_","",rownames(heat1))
+rownames(heat1)=gsub("batch2_","",rownames(heat1))
+
+colnames(heat1)=gsub("batch1_","",colnames(heat1))
+colnames(heat1)=gsub("batch2_","",colnames(heat1))
+
+all.meta=cbind(moffit,collison,bailey,sc)
+all.meta.sub=all.meta[,c(1,6:8,2:3,26:28,51:54,77:83,104)]
+
+
+
+ha1 = HeatmapAnnotation(group=all.meta.sub$Genotype,cluster=all.meta.sub$nmf_cluster,classical=lee3.ann$classical,Basal.like=lee3.ann$BASAL.LIKE,time=lee3.ann$Timepoint,col = list(cluster=c('1'='cyan', '2' = 'green', '3'='red', '4'='pink' ),time=c('morbid'='red', 'pre-morbid' = 'green', 'remove'='black', 'not_available'='grey'),group=c("Kras_TP53_Cancer_PDAC"="grey","Kras_Twist1_Cancer_PDAC"="green","Kras_Twist1_Cancer_SCC"="red")))
+
+p=Heatmap(heat1, top_annotation = ha1,row_names_gp = gpar(fontsize = 12),column_names_gp = gpar(fontsize = 12))
+
+draw(p, padding = unit(c(30, 10, 10, 40), "mm"),heatmap_legend_side="left", annotation_legend_side="left",
+legend_grouping = "adjusted")
+
+dev.off()
