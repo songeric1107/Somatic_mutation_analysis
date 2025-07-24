@@ -29,9 +29,9 @@ tempus_gene=read.table("/local/projects-t3/PTRAN/Projects_starting_Jan2025/dnase
 share_gene=merge(foundation_gene,tempus_gene,by="V1")
 
 batch1.sub=subsetMaf(batch1,genes=share_gene$V1,dropLevels = F)
-saveRDS(batch1.sub,"~/Desktop/batch1.share.gene.rds")
+saveRDS(batch1.sub,"/local/projects-t3/PTRAN/Projects_starting_Jan2025/dnaseq/ysong/IGS_pipeline_output/maf/raw_batch1/batch1.share.gene.rds")
 batch2.sub=subsetMaf(batch2,genes=share_gene$V1,dropLevels = F)
-saveRDS(batch2.sub,"~/Desktop/batch2.share.gene.rds")
+saveRDS(batch2.sub,"/local/projects-t3/PTRAN/Projects_starting_Jan2025/dnaseq/ysong/IGS_pipeline_output/maf/raw_batch1/batch2.share.gene.rds")
 library(maftools)
 
 # Step 1: Merge MAFs
