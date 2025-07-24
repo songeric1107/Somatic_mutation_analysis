@@ -11,8 +11,8 @@ batch1=read.maf(data.all.ann,clinicalData = meta1f[-c(1:2,19:39)])
 #saveRDS(batch1,"batch1.rds")
 
 
-batch2=readRDS("/Volumes/projects-t3/PTRAN/Projects_starting_Jan2025/dnaseq/ysong/IGS_pipeline_output/maf/all.patho.w.conflic.patho.update.rds")
-meta2=read.table("/Volumes/projects-t3/PTRAN/Projects_starting_Jan2025/dnaseq/ysong/IGS_pipeline_output/maf/raw_batch1/batch2_w_ai.txt",sep="\t",header=T)
+batch2=readRDS("/local/projects-t3/PTRAN/Projects_starting_Jan2025/dnaseq/ysong/IGS_pipeline_output/maf/all.patho.w.conflic.patho.update.rds")
+meta2=read.table("/local/projects-t3/PTRAN/Projects_starting_Jan2025/dnaseq/ysong/IGS_pipeline_output/maf/raw_batch1/batch2_w_ai.txt",sep="\t",header=T)
 
 data2=batch2@data
 
@@ -24,7 +24,7 @@ batch2=read.maf(data2a,clinicalData = meta2)
 
 
 
-foundation_gene=read.table("/Volumes/projects-t3/PTRAN/Projects_starting_Jan2025/dnaseq/ysong/IGS_pipeline_output/maf/raw_batch1/Download FoundationOne_CDx_324_genes.txt",sep="\t",header=F)
+foundation_gene=read.table("/local/projects-t3/PTRAN/Projects_starting_Jan2025/dnaseq/ysong/IGS_pipeline_output/maf/raw_batch1/Download FoundationOne_CDx_324_genes.txt",sep="\t",header=F)
 tempus_gene=read.table("/local/projects-t3/PTRAN/Projects_starting_Jan2025/dnaseq/ysong/IGS_pipeline_output/maf/raw_batch1/tempus_gene_update.version.txt",sep="\t",header=F)
 share_gene=merge(foundation_gene,tempus_gene,by="V1")
 
